@@ -1,0 +1,95 @@
+name: PR Green API Checks
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-green-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build baseline
+        run: mvn -q -DskipTests -f baseline/pom.xml package
+      - name: Build optimized
+        run: mvn -q -DskipTests -f optimized/pom.xml package
+
+  smoke-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Start baseline (8080)
+        run: |
+          nohup java -jar baseline/target/green-api-baseline-0.0.1-SNAPSHOT.jar > baseline.log 2>&1 &
+          echo $! > baseline.pid
+      - name: Start optimized (8081)
+        run: |
+          nohup java -jar optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > optimized.log 2>&1 &
+          echo $! > optimized.pid
+      - name: Wait for services
+        run: |
+          for i in {1..40}; do
+            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 &&                curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1; then
+              echo "Services are up"; break; fi; sleep 2; done
+      - name: Smoke — baseline
+        run: |
+          chmod +x scripts/measure_baseline.sh
+          BASE=http://localhost:8080 scripts/measure_baseline.sh | tee baseline.out
+      - name: Smoke — optimized
+        run: |
+          chmod +x scripts/measure_optimized.sh
+          BASE=http://localhost:8081 scripts/measure_optimized.sh | tee optimized.out
+      - name: Assertions (payload ratio & 304)
+        shell: bash
+        run: |
+          set -e
+          base_size=$(curl --retry 5 --retry-delay 2 -s -w 'size=%{size_download}
+' -o /dev/null http://localhost:8080/books | awk -F= '/^size/ {print $2}')
+          opt_size=$(curl --retry 5 --retry-delay 2 -s -w 'size=%{size_download}
+' -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50" | awk -F= '/^size/ {print $2}')
+          echo "Baseline size: $base_size" >> $GITHUB_STEP_SUMMARY
+          echo "Optimized size (select 50): $opt_size" >> $GITHUB_STEP_SUMMARY
+          if [ "$opt_size" -ge $(( base_size / 10 )) ]; then
+            echo "❌ Optimized payload not small enough vs baseline (expected < baseline/10)" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ Optimized payload at least 10x smaller than baseline" >> $GITHUB_STEP_SUMMARY
+          fi
+          etag=$(curl -sI "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20" | awk -F': ' '/^ETag:/ {print $2}' | tr -d '')
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "If-None-Match: $etag" "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20")
+          echo "ETag: $etag, 304 code: $code" >> $GITHUB_STEP_SUMMARY
+          test "$code" = "304"
+      - name: Upload logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            baseline.log
+            optimized.log
+            baseline.out
+            optimized.out
+      - name: Stop services
+        if: always()
+        run: |
+          kill $(cat baseline.pid) || true
+          kill $(cat optimized.pid) || true

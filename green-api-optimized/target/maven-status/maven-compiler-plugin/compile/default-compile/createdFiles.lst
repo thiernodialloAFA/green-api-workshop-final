@@ -1,0 +1,8 @@
+com\example\optimized\web\RateLimitFilter.class
+com\example\optimized\web\RateLimitFilter$Bucket.class
+com\example\optimized\observability\PayloadLoggingFilter.class
+com\example\optimized\config\WebConfig.class
+com\example\optimized\api\BookController.class
+com\example\optimized\OptimizedApplication.class
+com\example\optimized\repo\BookRepository.class
+com\example\optimized\domain\Book.class
