@@ -4,19 +4,41 @@ import com.example.optimized.domain.Book;
 import com.example.optimized.repo.BookRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
+import static com.example.optimized.api.BookReactiveController.getBookResponseEntity;
 
 @RestController
 @RequestMapping("/books")
 public class BookController {
     private final BookRepository repo;
     public BookController(BookRepository repo) { this.repo = repo; }
+
+    @GetMapping
+    public List<Book> all() { return repo.findAll(); }
+
+
+
+
+
+    @GetMapping("noCache/{id}")
+    public Book byId(@PathVariable("id") long id) { return repo.findById(id).get(); }
+
+
+
+
+
+
+
+
+
+
 
     // Pagination simple
     @GetMapping(params = {"page","size"})
@@ -26,6 +48,10 @@ public class BookController {
         int to   = Math.max(from, Math.min(from + size, all.size()));
         return all.subList(from, to);
     }
+
+
+
+
 
     // Filtrage de champs
     @GetMapping(value = "/select")
@@ -38,12 +64,12 @@ public class BookController {
         var slice = page(page, size);
         return Collections.singletonList(slice.stream().map(b -> {
                     var m = new LinkedHashMap<String, Object>();
-                    if (wanted.contains("id")) m.put("id", b.id());
-                    if (wanted.contains("title")) m.put("title", b.title());
-                    if (wanted.contains("author")) m.put("author", b.author());
-                    if (wanted.contains("year")) m.put("year", b.year());
-                    if (wanted.contains("pages")) m.put("pages", b.pages());
-                    if (wanted.contains("summary")) m.put("summary", b.summary());
+                    if (wanted.contains("id")) m.put("id", b.getId());
+                    if (wanted.contains("title")) m.put("title", b.getTitle());
+                    if (wanted.contains("author")) m.put("author", b.getAuthor());
+                    if (wanted.contains("yea")) m.put("year", b.getYea());
+                    if (wanted.contains("pages")) m.put("pages", b.getPages());
+                    if (wanted.contains("summary")) m.put("summary", b.getSummary());
                     return m;
                 }
         ).toList());
@@ -59,30 +85,7 @@ public class BookController {
         var opt = repo.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         var b = opt.get();
-        var etag = '"' + Long.toHexString(b.version()) + '"';
-        var lastModMillis = b.lastModified().toEpochMilli();
-        if (inm != null && inm.equals(etag)) {
-            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-                .eTag(etag)
-                .lastModified(lastModMillis)
-                .build();
-        }
-        if (ims != null) {
-            try {
-                long imsMillis = ZonedDateTime.parse(ims, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli();//HttpHeaders.parseDate(ims);
-                if (lastModMillis/1000*1000 <= imsMillis) {
-                    return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-                        .eTag(etag)
-                        .lastModified(lastModMillis)
-                        .build();
-                }
-            } catch (IllegalArgumentException ignored) {}
-        }
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.maxAge(java.time.Duration.ofMinutes(5)).cachePublic())
-            .eTag(etag)
-            .lastModified(lastModMillis)
-            .body(b);
+        return getBookResponseEntity(inm, ims, b);
     }
 
     // Résumé avec support Range 206
@@ -93,7 +96,7 @@ public class BookController {
     ){
         var opt = repo.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        var summary = opt.get().summary();
+        var summary = opt.get().getSummary();
         var bytes = summary.getBytes(StandardCharsets.UTF_8);
         int len = bytes.length;
         if (range == null || !range.startsWith("bytes=")) {
@@ -133,5 +136,29 @@ public class BookController {
         var updated = repo.updateSummary(id, body.getOrDefault("summary", ""));
         if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
+    }
+
+    // Endpoint CBOR : retourne la liste des livres au format CBOR si demandé
+    @GetMapping(value = "/cbor", produces = "application/cbor")
+    public ResponseEntity<List<Book>> getBooksCbor() {
+        var all = repo.findAll();
+        return ResponseEntity.ok().body(all);
+    }
+
+    // Endpoint asynchrone : liste des livres
+    @Async
+    @GetMapping("/async")
+    public CompletableFuture<List<Book>> getBooksAsync() {
+        return CompletableFuture.supplyAsync(() -> repo.findAll());
+    }
+
+    // Endpoint asynchrone : livre par ID
+    @Async
+    @GetMapping("/async/{id}")
+    public CompletableFuture<ResponseEntity<Book>> getBookByIdAsync(@PathVariable("id") long id) {
+        return CompletableFuture.supplyAsync(() -> {
+            var opt = repo.findById(id);
+            return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        });
     }
 }
