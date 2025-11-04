@@ -1,10 +1,14 @@
 package com.example.optimized.api;
 
 import com.example.optimized.domain.Book;
+import com.example.optimized.service.BookService;
 import com.example.optimized.repo.BookReactiveRepository;
+import com.example.optimized.service.BookServiceReactif;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,15 +20,31 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/reactive/books")
+@Slf4j
 public class BookReactiveController {
+    private final BookServiceReactif bookService;
     private final BookReactiveRepository repo;
-    public BookReactiveController(BookReactiveRepository repo) { this.repo = repo; }
 
-    // Endpoint réactif : liste des livres
+    public BookReactiveController(BookServiceReactif bookService, BookReactiveRepository repo) {
+        this.bookService = bookService;
+        this.repo = repo;
+    }
+
+    // Endpoint réactif : liste des livres (sans cache)
     @GetMapping
-    public Flux<Book> allBooks() {
+    public Flux<Book> allBooksWithoutCache() {
+        log.info("Fetching all books without cache");
         return repo.findAll();
     }
+
+    // Endpoint réactif : liste des livres (cache)
+    @GetMapping("/cacheable")
+    public Mono<List<Book>> allBooks() {
+        log.info("Fetching all books with cache");
+        return Mono.justOrEmpty(bookService.findAllCached());
+    }
+
+
 
     // Pagination simple (réactif)
     @GetMapping(params = {"page","size"})
@@ -50,7 +70,7 @@ public class BookReactiveController {
                 if (wanted.contains("id")) m.put("id", b.getId());
                 if (wanted.contains("title")) m.put("title", b.getTitle());
                 if (wanted.contains("author")) m.put("author", b.getAuthor());
-                if (wanted.contains("yea")) m.put("year", b.getYea());
+                if (wanted.contains("published_date")) m.put("published_date", b.getPublished_date());
                 if (wanted.contains("pages")) m.put("pages", b.getPages());
                 if (wanted.contains("summary")) m.put("summary", b.getSummary());
                 return m;
@@ -143,7 +163,7 @@ public class BookReactiveController {
                 old.getId(),
                 old.getTitle(),
                 old.getAuthor(),
-                old.getYea(),
+                old.getPublished_date(),
                 old.getPages(),
                 body.getOrDefault("summary", ""),
                 Instant.now(),

@@ -1,12 +1,13 @@
-package com.example.optimized.domain;
-
+package com.example.baseline.database.domain;
+import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
 import java.time.Instant;
 
-@Table("book")
+@Entity
 @Data
+@Table(name = "book")
 public class Book {
     @Id
     private Long id;
