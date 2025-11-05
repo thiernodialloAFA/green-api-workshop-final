@@ -1,31 +1,30 @@
 # Green API Review Checklist (API Green Score)
 
-Merci d’indiquer les **mesures avant/après** (payload/latence).
+Please indicate **before/after measurements** (payload/latency).
 
 ## Data Exchange
-- [ ] **DE11 – Pagination** (size borné ≤100, validé)
-- [ ] **DE08 – Filtrage** via `fields=` (whitelist, champs coûteux off par défaut)
-- [ ] **DE01/USXX – Format & compression** (JSON/CBOR, Gzip activé & testé)
-- [ ] **DE02/DE03 – Cache HTTP** (`Cache-Control` + **ETag**/`Last-Modified` → **304** en test)
-- [ ] **DE06/US04 – Delta** (`/changes?since=…` ou `sinceVersion`)
-- [ ] **206 Partial Content** (`Range: bytes=` pour ressources volumineuses)
+- [ ] **DE11 – Pagination** (bounded size ≤100, validated)
+- [ ] **DE08 – Filtering** via `fields=` (whitelist, expensive fields off by default)
+- [ ] **DE01/USXX – Format & compression** (JSON/CBOR, Gzip enabled & tested)
+- [ ] **DE02/DE03 – HTTP Cache** (`Cache-Control` + **ETag**/`Last-Modified` → **304** in test)
+- [ ] **DE06/US04 – Delta** (`/changes?since=…` or `sinceVersion`)
+- [ ] **206 Partial Content** (`Range: bytes=` for large resources)
 
-## Usage / Archi / Logs
-- [ ] **US01 – Query params** pour GET (page/size/fields)
-- [ ] **US07 – Monitoring erreurs** (Actuator/metrics)
-- [ ] **AR02 – Efficacité** (batch, agrégation, keyset pagination)
-- [ ] **LO01 – Logs utiles** (bytes, timeMs, 304) & rétention documentée
-- [ ] **Rate limiting** pour éviter rafales inutiles
+## Usage / Architecture / Logs
+- [ ] **US01 – Query params** for GET (page/size/fields)
+- [ ] **US07 – Error monitoring** (Actuator/metrics)
+- [ ] **AR02 – Efficiency** (batch, aggregation, keyset pagination)
+- [ ] **LO01 – Useful logs** (bytes, timeMs, 304) & documented retention
+- [ ] **Rate limiting** to avoid unnecessary bursts
 
-## Sécurité & robustesse
-- [ ] Validation inputs (bornes `size`, whitelist `fields`)
-- [ ] Idempotency‑Key sur POST critiques
+## Security & Robustness
+- [ ] Input validation (bounds for `size`, whitelist for `fields`)
+- [ ] Idempotency‑Key for critical POSTs
 
-## Mesures
+## Measurements
 ```
-curl -s -w 'size=%{size_download} time=%{time_total}
-' -o /dev/null <URL>
+curl -s -w 'size=%{size_download} time=%{time_total}\n' -o /dev/null <URL>
 ```
-- Avant : …
-- Après : …
-- Gain : … %
+- Before: …
+- After: …
+- Gain: … %
