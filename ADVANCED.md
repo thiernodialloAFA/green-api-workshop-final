@@ -1,9 +1,9 @@
-# Exercices avancés & scénarios complexes (avec solutions succinctes)
+# Advanced Exercises & Complex Scenarios (with brief solutions)
 
-1) **Batching** `GET /books/batch?ids=1,2,3` → éviter N appels.
-2) **TTL adaptatif** : `Cache-Control` conditionnel (ex: `max-age` élevé si données stables).
-3) **Delta par version** : `GET /books/changes?sinceVersion=1234`.
-4) **Idempotency‑Key** pour POST → éviter doublons.
-5) **SSE/Webhook** pour réduire le polling.
-6) **Keyset pagination** (`afterId`) → éviter OFFSET profonds.
-7) **Ranges multiples** `bytes=0-99,200-299` (bonus).
+1) **Batching** `GET /books/batch?ids=1,2,3` → avoid N separate calls.
+2) **Adaptive TTL**: conditional `Cache-Control` (e.g., high `max-age` for stable data).
+3) **Delta by version**: `GET /books/changes?sinceVersion=1234`.
+4) **Idempotency‑Key** for POST → prevent duplicates.
+5) **SSE/Webhook** to reduce polling.
+6) **Keyset pagination** (`afterId`) → avoid deep OFFSETs.
+7) **Multiple ranges** `bytes=0-99,200-299` (bonus).
