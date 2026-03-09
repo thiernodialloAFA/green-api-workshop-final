@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-BASE=${BASE:-http://localhost:8081}
+BASE=${BASE:-http://localhost:8080}
 
 echo "== Baseline: /books/nocache/1 =="
 curl -s -w '

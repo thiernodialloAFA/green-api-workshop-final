@@ -1,23 +1,68 @@
 #!/usr/bin/env bash
 set -euo pipefail
-BASE=${BASE:-http://localhost:8081}
+BASELINE=${BASELINE:-http://localhost:8080}
+OPTIMIZED=${OPTIMIZED:-http://localhost:8081}
 
-API_URL="http://localhost:8080/books"
+echo "══════════════════════════════════════════════════"
+echo "  🌿 Green API — Mesures complètes avant/après"
+echo "══════════════════════════════════════════════════"
+echo ""
 
-echo "Test sélection de champs (fields=id,title,author,summary)..."
-curl -s "$API_URL/select?fields=id,title,author,summary&page=0&size=5" | jq
+echo "━━━ 🔴 BASELINE (port 8080) ━━━"
+echo ""
 
-echo "\nTest pagination (page=1, size=3)..."
-curl -s "$API_URL?page=1&size=3" | jq
+echo "Test GET /books (full payload, no pagination)..."
+curl -s -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$BASELINE/books"
 
-echo "\nTest ressource unitaire avec ETag et Last-Modified (id=1)..."
-curl -i "$API_URL/1"
+echo ""
+echo "Test GET /books/1 (single resource, no cache)..."
+curl -s -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$BASELINE/books/1"
 
-echo "\nTest résumé avec Range (id=1, bytes=0-19)..."
-curl -i -H "Range: bytes=0-19" "$API_URL/1/summary"
+echo ""
+echo "━━━ 🟢 OPTIMIZED (port 8081) ━━━"
+echo ""
 
-echo "\nTest delta changes depuis une date (since=2024-01-01T00:00:00Z)..."
-curl -s "$API_URL/changes?since=2024-01-01T00:00:00Z" | jq
+echo "Test pagination (page=0, size=20)..."
+curl -s -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$OPTIMIZED/books?page=0&size=20"
 
-echo "\nTest endpoint CBOR (Accept: application/cbor)..."
-curl -s -H "Accept: application/cbor" "$API_URL/cbor" | hexdump -C
+echo ""
+echo "Test sélection de champs (fields=id,title,author)..."
+curl -s -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$OPTIMIZED/books/select?fields=id,title,author&page=0&size=20"
+
+echo ""
+echo "Test compression gzip..."
+curl -s -H 'Accept-Encoding: gzip' \
+  -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$OPTIMIZED/books/select?fields=id,title,author&page=0&size=50"
+
+echo ""
+echo "Test ETag + 304..."
+ETAG=$(curl -sI "$OPTIMIZED/books/1" | grep -i '^etag:' | awk -F': ' '{print $2}' | tr -d '\r\n')
+echo "  ETag: $ETAG"
+curl -s -o /dev/null -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -H "If-None-Match: $ETAG" "$OPTIMIZED/books/1"
+
+echo ""
+echo "Test delta changes (since=2024-01-01)..."
+curl -s -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$OPTIMIZED/books/changes?since=2024-01-01T00:00:00Z"
+
+echo ""
+echo "Test Range 206 (bytes=0-199)..."
+curl -s -o /dev/null -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -H 'Range: bytes=0-199' "$OPTIMIZED/books/1/summary"
+
+echo ""
+echo "Test CBOR format..."
+curl -s -H 'Accept: application/cbor' \
+  -w 'http_code=%{http_code} size=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "$OPTIMIZED/books/cbor"
+
+echo ""
+echo "══════════════════════════════════════════════════"
+echo "  ✅ Mesures terminées"
+echo "══════════════════════════════════════════════════"

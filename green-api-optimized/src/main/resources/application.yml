@@ -2,13 +2,16 @@ server:
   port: 8081
   compression:
     enabled: true
-    mime-types: application/json,text/plain,application/javascript
+    mime-types: application/json,text/plain,application/javascript,application/cbor
     min-response-size: 1024
 management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        include: health,metrics,info,prometheus
+  endpoint:
+    health:
+      show-details: always
 logging:
   level:
     com.example.optimized: INFO
@@ -25,3 +28,7 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+app:
+  dataset:
+    size: 1000000

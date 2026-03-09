@@ -1,0 +1,81 @@
+version: "3.9"
+# ─────────────────────────────────────────────────────────────
+#  Green API Workshop — Docker Compose
+#  Devoxx France 2026 — Tools in Action
+# ─────────────────────────────────────────────────────────────
+services:
+
+  # ── Baseline API (naïve, port 8080) ──────────────────────
+  baseline:
+    build:
+      context: ./green-api-baseline
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - green-net
+
+  # ── Optimized API (port 8081) ────────────────────────────
+  optimized:
+    build:
+      context: ./green-api-optimized
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - green-net
+
+  # ── Dashboard (nginx, port 3000) ─────────────────────────
+  dashboard:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      - ./reports:/usr/share/nginx/html/reports:ro
+    depends_on:
+      - baseline
+      - optimized
+    networks:
+      - green-net
+
+  # ── Analyzer (one-shot, generates report) ────────────────
+  analyzer:
+    image: curlimages/curl:latest
+    depends_on:
+      baseline:
+        condition: service_healthy
+      optimized:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./reports:/reports
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        apk add --no-cache bash python3 coreutils > /dev/null 2>&1
+        BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash /scripts/green-score-analyzer.sh
+    environment:
+      - BASELINE_PORT=8080
+      - OPTIMIZED_PORT=8081
+    networks:
+      - green-net
+
+networks:
+  green-net:
+    driver: bridge
+

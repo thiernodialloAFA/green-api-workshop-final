@@ -2,8 +2,11 @@ package com.example.optimized.api;
 
 import com.example.optimized.domain.Book;
 import com.example.optimized.repo.BookReactiveRepository;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,6 +19,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/reactive/books")
+@Validated
 public class BookReactiveController {
     private final BookReactiveRepository repo;
     public BookReactiveController(BookReactiveRepository repo) { this.repo = repo; }
@@ -28,7 +32,10 @@ public class BookReactiveController {
 
     // Pagination simple (réactif)
     @GetMapping(params = {"page","size"})
-    public Flux<Book> page(@RequestParam("page") int page, @RequestParam("size") int size){
+    public Flux<Book> page(
+        @RequestParam("page") @Min(0) int page,
+        @RequestParam("size") @Min(1) @Max(100) int size
+    ){
         return repo.findAll()
             .skip((long) page * size)
             .take(size);
@@ -38,10 +45,10 @@ public class BookReactiveController {
     @GetMapping(value = "/select")
     public Flux<Object> select(
         @RequestParam(name = "fields", defaultValue = "id,title,author") String fields,
-        @RequestParam(name = "page",defaultValue = "0") int page,
-        @RequestParam(name = "size", defaultValue = "20") int size
+        @RequestParam(name = "page",defaultValue = "0") @Min(0) int page,
+        @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) int size
     ){
-        var wanted = new LinkedHashSet<>(Arrays.asList(fields.split(",")));
+        var wanted = FieldSelector.parse(fields);
         return repo.findAll()
             .skip((long) page * size)
             .take(size)
@@ -50,7 +57,7 @@ public class BookReactiveController {
                 if (wanted.contains("id")) m.put("id", b.getId());
                 if (wanted.contains("title")) m.put("title", b.getTitle());
                 if (wanted.contains("author")) m.put("author", b.getAuthor());
-                if (wanted.contains("yea")) m.put("year", b.getYea());
+                if (wanted.contains("year")) m.put("year", b.getYea());
                 if (wanted.contains("pages")) m.put("pages", b.getPages());
                 if (wanted.contains("summary")) m.put("summary", b.getSummary());
                 return m;

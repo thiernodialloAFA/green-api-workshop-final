@@ -1,31 +1,168 @@
-# Green API Workshop (Java Spring Boot)
+# 🌿 Green Architecture : moins de gras, plus d'impact, plus d'efficacité !
 
-Atelier pratique (50 min) pour réduire l'empreinte des API HTTP en appliquant les règles **API Green Score** :
-- **DE11** Pagination, **DE08** Filtrage, **US01** Query params
-- **DE01/USXX** Compression (Gzip), **DE02/DE03** Cache HTTP (ETag/304)
-- **DE06/US04** Delta (changes since), **206** Partial Content (Range)
-- Logs utiles (**LO01**) & monitoring erreurs (**US07**)
+![Green Score](badges/green-score.svg)
 
-## Structure
-- `baseline/` : API naïve (référence)
-- `optimized/` : API optimisée (solutions + cas avancés)
-- `scripts/` : scripts `curl` pour mesurer **avant/après**
-- `docs/slides/Green-API-Workshop.pptx` : slide par règle avec emplacements de mesures
-- `CHECKLIST.md` & `.github/pull_request_template.md` : checklist PR
-- `WORKSHOP.md` : déroulé clé-en-main
-- `.github/workflows/pr-green-api.yml` : CI PR (build + assertions payload & 304)
+> **Devoxx France 2026 — Tools in Action**
+>
+> Vos APIs ont pris un peu de poids ? Elles consomment plus que nécessaire ?
+> Pas de panique, on sort la boîte à outils pour leur faire un **Green relooking** !
 
-## Démarrage rapide
-```bash
-# Terminal 1
-cd baseline && mvn spring-boot:run
-# Terminal 2
-cd optimized && mvn spring-boot:run
-# Terminal 3
-cd scripts && bash measure_baseline.sh && bash measure_optimized.sh
+[![Green API Score CI](https://github.com/YOUR_ORG/green-api-workshop-devoxx/actions/workflows/pr-green-api.yml/badge.svg)](https://github.com/YOUR_ORG/green-api-workshop-devoxx/actions)
+
+---
+
+## 🎯 Objectif
+
+Appliquer pas à pas le framework **[API Green Score](https://github.com/API-Green-Score/APIGreenScore)** sur une API réelle, avec des **outils open-source** et des **métriques concrètes**, pour obtenir une API plus légère, plus rapide, et un impact environnemental réduit.
+
+## 📐 Règles API Green Score couvertes
+
+| Catégorie | Règle | Description | Points |
+|-----------|-------|-------------|--------|
+| Data Exchange | **DE11** | Pagination obligatoire | 15 |
+| Data Exchange | **DE08** | Filtrage de champs (`fields=`) | 15 |
+| Data Exchange | **DE01** | Compression (Gzip/Brotli) | 15 |
+| Data Exchange | **DE02/DE03** | Cache HTTP (ETag → 304) | 15 |
+| Data Exchange | **DE06** | Delta (`/changes?since=`) | 10 |
+| Data Exchange | **206** | Partial Content (Range) | 10 |
+| Usage | **LO01** | Observabilité (logs payload/latence) | 5 |
+| Usage | **US07** | Rate Limiting | 5 |
+| Architecture | **AR02** | Format binaire (CBOR) | 10 |
+| | | **Total** | **100** |
+
+## 📁 Structure du projet
+
+```
+green-api-workshop-devoxx/
+├── green-api-baseline/        # 🔴 API naïve (AVANT) — port 8080
+│   ├── src/main/java/         #    Pas de pagination, pas de cache, pas de compression
+│   └── pom.xml
+├── green-api-optimized/       # 🟢 API optimisée (APRÈS) — port 8081
+│   ├── src/main/java/         #    Pagination, fields, gzip, ETag, delta, range, CBOR
+│   └── pom.xml
+├── scripts/                   # 📊 Scripts de mesure curl
+│   ├── green-score-analyzer.sh  # 🌿 Analyseur automatisé + calcul Green Score
+│   ├── measure_baseline.sh
+│   ├── measure_optimized.sh
+│   └── ...
+├── dashboard/                 # 📈 Dashboard HTML de restitution
+│   └── index.html             #    Scores, graphiques avant/après, historique
+├── reports/                   # 📄 Rapports JSON générés
+├── docs/slides/               # 🎤 Slides de présentation
+├── .github/workflows/         # 🤖 CI GitHub Actions
+│   └── pr-green-api.yml       #    Build + Green Score + Spectral lint
+├── .spectral.yml              # 🔬 Règles Spectral OpenAPI (éco-conception)
+├── docker-compose.yml         # 🐳 Orchestration Docker
+├── WORKSHOP.md                # 📝 Déroulé clé-en-main (50 min)
+├── CHECKLIST.md               # ✅ Checklist de review
+├── MAPPING.md                 # 🗺️ Mapping pratiques → règles
+└── ADVANCED.md                # 🚀 Exercices avancés
 ```
 
-## Documents utiles
-- [Checklist Green API (PR)](CHECKLIST.md)
-- Slides atelier : `docs/slides/Green-API-Workshop.pptx`
-- [Atelier clé‑en‑main](WORKSHOP.md)
+## 🚀 Démarrage rapide
+
+### Option 0 : Script start (local)
+
+```bash
+# Dataset plus gros pour accentuer le contraste avant/après
+DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+```
+
+```powershell
+$env:DATASET_SIZE=1000000
+.\scripts\start.ps1 -Analyze
+```
+
+### Option 1 : Maven (local)
+
+```bash
+# Terminal 1 — Baseline (API naïve, port 8080)
+cd green-api-baseline && mvn spring-boot:run
+
+# Terminal 2 — Optimized (API green, port 8081)
+cd green-api-optimized && mvn spring-boot:run
+
+# Terminal 3 — Analyse automatisée
+cd scripts && bash green-score-analyzer.sh
+```
+
+### Option 2 : Docker Compose
+
+```bash
+docker-compose up --build
+# → Baseline:  http://localhost:8080
+# → Optimized: http://localhost:8081
+# → Dashboard: http://localhost:3000
+```
+
+### Option 3 : Script de démo (présentation live)
+
+```bash
+DATASET_SIZE=1000000 bash scripts/run-demo.sh
+```
+
+## 📊 Dashboard
+
+Ouvrez `dashboard/index.html` dans votre navigateur pour visualiser :
+
+- 🌿 **Green Score /100** avec grade (A+ → E)
+- 📋 **Détail par règle** API Green Score
+- 📊 **Comparaison avant/après** (barres visuelles)
+- 🔑 **Métriques clés** (payload, compression, 304)
+- 📐 **Table de mesures** détaillée par endpoint
+- 📈 **Historique des scores** (tracking dans le temps)
+
+Le dashboard charge automatiquement `reports/latest-report.json` ou permet de charger manuellement un rapport.
+
+## 🤖 Automatisation CI
+
+Chaque PR déclenche automatiquement :
+
+1. **Build** des deux modules
+2. **Green Score Analysis** — démarre les 2 APIs, exécute l'analyseur, vérifie les assertions
+3. **Spectral Lint** — valide l'OpenAPI spec contre les règles Green API
+4. **Commentaire PR** — poste le score détaillé directement sur la PR
+
+## 📏 Mesurer en live
+
+```bash
+# Mesurer le baseline (gros payload)
+curl -s -w '\nsize=%{size_download} time=%{time_total}\n' -o /dev/null http://localhost:8080/books
+
+# Mesurer l'optimisé (paginé + filtré + gzip)
+curl -s -H 'Accept-Encoding: gzip' -w '\nsize=%{size_download} time=%{time_total}\n' \
+  -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20"
+
+# Vérifier le 304 avec ETag
+ETAG=$(curl -sI http://localhost:8081/books/1 | grep -i etag | awk '{print $2}' | tr -d '\r')
+curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" http://localhost:8081/books/1
+```
+
+## 📚 Liens utiles
+
+- [API Green Score — Référentiel de règles](https://github.com/API-Green-Score/APIGreenScore)
+- [API Green Score — Backend](https://github.com/API-Green-Score/API-Green-Score-Backend)
+- [API Green Score — Training](https://github.com/API-Green-Score/training-student)
+- [Spectral — OpenAPI Linter](https://stoplight.io/open-source/spectral)
+- [Devoxx France](https://www.devoxx.fr/)
+
+## 📝 Documents de l'atelier
+
+- [Déroulé clé-en-main (50 min)](WORKSHOP.md)
+- [Checklist de review](CHECKLIST.md)
+- [Mapping pratiques → règles](MAPPING.md)
+- [Exercices avancés](ADVANCED.md)
+- Slides : `docs/slides/`
+
+## 🏗️ Pré-requis
+
+- Java 17+
+- Maven 3.9+
+- `curl`
+- Python 3 (pour le script d'analyse)
+- Docker & Docker Compose (optionnel)
+- Node.js (optionnel, pour Spectral)
+
+## 📄 Licence
+
+MIT — Libre d'utilisation, de modification et de redistribution.

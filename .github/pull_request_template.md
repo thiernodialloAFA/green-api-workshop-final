@@ -29,3 +29,8 @@ curl -s -w 'size=%{size_download} time=%{time_total}
 - Avant : …
 - Après : …
 - Gain : … %
+
+## 🌿 Green Score (automatique)
+> Le CI calculera automatiquement le **Green Score /100** et postera un commentaire détaillé sur cette PR.
+> Consultez le dashboard : `dashboard/index.html`
+

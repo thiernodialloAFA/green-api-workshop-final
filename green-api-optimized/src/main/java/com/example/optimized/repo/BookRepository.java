@@ -1,6 +1,7 @@
 package com.example.optimized.repo;
 
 import com.example.optimized.domain.Book;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -14,8 +15,9 @@ public class BookRepository {
     private final Map<Long, Book> data = new ConcurrentHashMap<>();
     private final AtomicLong version = new AtomicLong(0);
 
-    public BookRepository() {
-        LongStream.rangeClosed(1, 500000).forEach(i -> {
+    public BookRepository(@Value("${app.dataset.size:1000000}") int size) {
+        int safeSize = Math.max(1, size);
+        LongStream.rangeClosed(1, safeSize).forEach(i -> {
             var b = new Book(
                 i,
                 "Title " + i,
@@ -36,8 +38,8 @@ public class BookRepository {
 
     public List<Book> findChangesSince(Instant since) {
         return data.values().stream()
-            .filter(b -> b.lastModified().isAfter(since))
-            .sorted(Comparator.comparing(Book::lastModified))
+            .filter(b -> b.getLastModified().isAfter(since))
+            .sorted(Comparator.comparing(Book::getLastModified))
             .toList();
     }
 
@@ -46,7 +48,7 @@ public class BookRepository {
         var ver = version.incrementAndGet();
         var old = data.get(id);
         if (old == null) return null;
-        var updated = new Book(old.id(), old.title(), old.author(), old.year(), old.pages(), newSummary, now, ver);
+        var updated = new Book(old.getId(), old.getTitle(), old.getAuthor(), old.getYea(), old.getPages(), newSummary, now, ver);
         data.put(id, updated);
         return updated;
     }

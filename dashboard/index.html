@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Green API Score Dashboard — Devoxx France 2026</title>
+    <style>
+        :root {
+            --green-50: #f0fdf4; --green-100: #dcfce7; --green-200: #bbf7d0;
+            --green-400: #4ade80; --green-500: #22c55e; --green-600: #16a34a;
+            --green-700: #15803d; --green-800: #166534; --green-900: #14532d;
+            --red-400: #f87171; --red-500: #ef4444;
+            --yellow-400: #facc15; --yellow-500: #eab308;
+            --blue-400: #60a5fa; --blue-500: #3b82f6;
+            --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+            --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+            --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+            --gray-900: #111827;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--green-900) 100%);
+            color: var(--gray-100);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--green-400), var(--green-200));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header .subtitle {
+            color: var(--gray-400);
+            font-size: 1.1rem;
+        }
+        .header .badge {
+            display: inline-block;
+            background: var(--green-800);
+            color: var(--green-200);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .controls button, .controls label {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-200);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .controls button:hover { background: var(--green-700); border-color: var(--green-500); }
+        .controls input[type="file"] { display: none; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+        .card {
+            background: rgba(31,41,55,0.85);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+        .card h2 {
+            font-size: 1.15rem;
+            color: var(--green-400);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .score-hero {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+        }
+        .score-circle {
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            position: relative;
+        }
+        .score-circle .number { font-size: 3.5rem; font-weight: 800; }
+        .score-circle .max { font-size: 1rem; color: var(--gray-400); }
+        .score-circle .grade {
+            position: absolute;
+            top: -10px; right: -10px;
+            background: var(--green-500);
+            color: white;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; font-weight: 800;
+            box-shadow: var(--shadow-lg);
+        }
+        .rule-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-700);
+        }
+        .rule-row:last-child { border-bottom: none; }
+        .rule-name { font-weight: 600; }
+        .rule-score {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .rule-score.good { background: var(--green-800); color: var(--green-200); }
+        .rule-score.medium { background: rgba(234,179,8,0.2); color: var(--yellow-400); }
+        .rule-score.bad { background: rgba(239,68,68,0.2); color: var(--red-400); }
+        .bar-container { width: 100%; background: var(--gray-700); border-radius: 6px; height: 24px; overflow: hidden; margin: 6px 0; }
+        .bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white; }
+        .bar.baseline { background: var(--red-500); }
+        .bar.optimized { background: var(--green-500); }
+        .comparison-row { margin-bottom: 14px; }
+        .comparison-label { font-size: 0.85rem; color: var(--gray-400); margin-bottom: 4px; }
+        .comparison-values { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--gray-300); }
+        .gain-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .gain-badge.positive { background: var(--green-800); color: var(--green-200); }
+        .gain-badge.negative { background: rgba(239,68,68,0.2); color: var(--red-400); }
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric-item { text-align: center; padding: 12px; background: var(--gray-800); border-radius: 8px; }
+        .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--green-400); }
+        .metric-label { font-size: 0.8rem; color: var(--gray-400); margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; color: var(--green-400); padding: 8px 6px; border-bottom: 2px solid var(--gray-600); }
+        td { padding: 8px 6px; border-bottom: 1px solid var(--gray-700); }
+        .history-chart { width: 100%; height: 200px; position: relative; }
+        .empty-state { text-align: center; padding: 40px; color: var(--gray-500); }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+        #timeline-canvas { width: 100%; height: 200px; }
+        .footer { text-align: center; margin-top: 40px; color: var(--gray-500); font-size: 0.85rem; }
+        .footer a { color: var(--green-400); text-decoration: none; }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            .score-circle { width: 150px; height: 150px; }
+            .score-circle .number { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌿 Green API Score Dashboard</h1>
+        <div class="subtitle">Green Architecture : moins de gras, plus d'impact, plus d'efficacité !</div>
+        <div class="badge">Devoxx France 2026 — Tools in Action</div>
+    </div>
+
+    <div class="controls">
+        <label for="file-input">📂 Charger un rapport JSON
+            <input type="file" id="file-input" accept=".json" multiple>
+        </label>
+        <button onclick="loadFromUrl()">🔗 Charger depuis URL</button>
+        <button onclick="loadSampleData()">🧪 Données démo</button>
+        <button onclick="exportPng()">📸 Exporter PNG</button>
+        <button onclick="clearHistory()">🗑️ Réinitialiser</button>
+    </div>
+
+    <div class="grid" id="main-grid">
+        <!-- Score Hero -->
+        <div class="card score-hero" id="score-hero">
+            <div class="empty-state" id="empty-state">
+                <div class="icon">📊</div>
+                <p>Chargez un rapport JSON généré par <code>green-score-analyzer.sh</code></p>
+                <p style="margin-top:8px;font-size:0.85rem;">ou cliquez sur "Données démo" pour voir un aperçu</p>
+            </div>
+            <div id="score-display" style="display:none;">
+                <div class="score-circle" id="score-circle">
+                    <span class="number" id="score-number">0</span>
+                    <span class="max">/ 100</span>
+                    <span class="grade" id="score-grade">—</span>
+                </div>
+                <div style="color:var(--gray-400);margin-top:8px;" id="score-timestamp"></div>
+            </div>
+        </div>
+
+        <!-- Rules Breakdown -->
+        <div class="card" id="rules-card" style="display:none;">
+            <h2>📋 Détail par règle API Green Score</h2>
+            <div id="rules-list"></div>
+        </div>
+
+        <!-- Before/After Comparison -->
+        <div class="card" id="comparison-card" style="display:none;">
+            <h2>📊 Avant / Après — Payload (bytes)</h2>
+            <div id="comparison-bars"></div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="card" id="metrics-card" style="display:none;">
+            <h2>🔑 Métriques clés</h2>
+            <div class="metric-grid" id="metrics-grid"></div>
+        </div>
+
+        <!-- Measurements Table -->
+        <div class="card" id="table-card" style="display:none;grid-column:1/-1;">
+            <h2>📐 Détail des mesures</h2>
+            <div style="overflow-x:auto;">
+                <table id="measurements-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>HTTP</th>
+                            <th>Taille (bytes)</th>
+                            <th>Temps (s)</th>
+                            <th>Règle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="measurements-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- History Timeline -->
+        <div class="card" id="history-card" style="display:none;grid-column:1/-1;">
+            <h2>📈 Historique des scores</h2>
+            <canvas id="timeline-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🌿 API Green Score — <a href="https://github.com/API-Green-Score/APIGreenScore" target="_blank">Framework</a> |
+        <a href="https://github.com/API-Green-Score/training-student" target="_blank">Training</a> |
+        Devoxx France 2026</p>
+    </div>
+
+<script>
+const STORAGE_KEY = 'green-api-score-history';
+
+// ─── State ─────────────────────────────────────────────────────
+let currentReport = null;
+let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+// ─── File Input ────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', async (e) => {
+    for (const file of e.target.files) {
+        const text = await file.text();
+        try {
+            const report = JSON.parse(text);
+            addToHistory(report);
+            renderReport(report);
+        } catch (err) {
+            alert('Erreur de parsing JSON: ' + err.message);
+        }
+    }
+});
+
+function loadFromUrl() {
+    const url = prompt('URL du rapport JSON:', 'reports/latest-report.json');
+    if (!url) return;
+    fetch(url)
+        .then(r => r.json())
+        .then(report => { addToHistory(report); renderReport(report); })
+        .catch(err => alert('Erreur: ' + err.message));
+}
+
+function addToHistory(report) {
+    // Avoid duplicates by timestamp
+    if (!history.find(h => h.timestamp === report.timestamp)) {
+        history.push({
+            timestamp: report.timestamp,
+            total: report.green_score.total,
+            grade: report.green_score.grade,
+            breakdown: report.green_score.breakdown
+        });
+        history.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+        // Keep last 50
+        if (history.length > 50) history = history.slice(-50);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    }
+}
+
+function clearHistory() {
+    if (confirm('Supprimer tout l\'historique ?')) {
+        history = [];
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+    }
+}
+
+// ─── Render ────────────────────────────────────────────────────
+function renderReport(report) {
+    currentReport = report;
+    const gs = report.green_score;
+    const m = report.measurements;
+
+    // Hero score
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('score-display').style.display = 'block';
+    document.getElementById('score-number').textContent = gs.total;
+    document.getElementById('score-grade').textContent = gs.grade;
+    document.getElementById('score-timestamp').textContent = '📅 ' + report.timestamp;
+
+    // Color the circle
+    const circle = document.getElementById('score-circle');
+    const color = gs.total >= 80 ? 'var(--green-600)' : gs.total >= 50 ? 'var(--yellow-500)' : 'var(--red-500)';
+    circle.style.border = `6px solid ${color}`;
+    circle.style.boxShadow = `0 0 30px ${color}40`;
+    document.getElementById('score-grade').style.background = color;
+
+    // Rules breakdown
+    const rulesCard = document.getElementById('rules-card');
+    rulesCard.style.display = 'block';
+    const rulesList = document.getElementById('rules-list');
+    rulesList.innerHTML = '';
+
+    const ruleLabels = {
+        'DE11_pagination': { name: 'DE11 — Pagination', max: 15, icon: '📄' },
+        'DE08_fields': { name: 'DE08 — Filtrage champs', max: 15, icon: '🔍' },
+        'DE01_compression': { name: 'DE01 — Compression Gzip', max: 15, icon: '🗜️' },
+        'DE02_DE03_cache': { name: 'DE02/03 — Cache ETag/304', max: 15, icon: '💾' },
+        'DE06_delta': { name: 'DE06 — Delta changes', max: 10, icon: '🔄' },
+        'range_206': { name: '206 — Partial Content', max: 10, icon: '✂️' },
+        'LO01_observability': { name: 'LO01 — Observabilité', max: 5, icon: '👁️' },
+        'US07_rate_limit': { name: 'US07 — Rate Limiting', max: 5, icon: '🚦' },
+        'AR02_format_cbor': { name: 'AR02 — Format CBOR', max: 10, icon: '📦' },
+    };
+
+    for (const [key, meta] of Object.entries(ruleLabels)) {
+        const score = gs.breakdown[key] || 0;
+        const pct = (score / meta.max * 100);
+        const cls = pct >= 75 ? 'good' : pct >= 40 ? 'medium' : 'bad';
+        const detail = gs.details && gs.details[key] ? gs.details[key] : {};
+        const note = detail.reduction_pct ? `(-${detail.reduction_pct}%)` : (detail.note || '');
+
+        rulesList.innerHTML += `
+            <div class="rule-row">
+                <div>
+                    <span class="rule-name">${meta.icon} ${meta.name}</span>
+                    <span style="font-size:0.75rem;color:var(--gray-400);margin-left:8px;">${note}</span>
+                </div>
+                <span class="rule-score ${cls}">${score} / ${meta.max}</span>
+            </div>`;
+    }
+
+    // Comparison bars
+    const compCard = document.getElementById('comparison-card');
+    compCard.style.display = 'block';
+    const compBars = document.getElementById('comparison-bars');
+    compBars.innerHTML = '';
+
+    const comparisons = [
+        { label: 'Full payload (all books)', baseline: m.baseline?.full_payload?.size_download, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
+        { label: 'Paginated → Fields filter', baseline: m.optimized?.pagination?.size_download, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
+        { label: 'Fields → Gzip compressed', baseline: m.optimized?.fields_filter?.size_download, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
+        { label: 'Resource → ETag 304', baseline: m.optimized?.etag_first_call?.size_download, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
+    ];
+
+    const maxBytes = Math.max(...comparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 1);
+
+    for (const c of comparisons) {
+        const b = c.baseline || 0;
+        const o = c.optimized || 0;
+        const gain = b > 0 ? Math.round((1 - o / b) * 100) : 0;
+        const gainCls = gain > 0 ? 'positive' : 'negative';
+
+        compBars.innerHTML += `
+            <div class="comparison-row">
+                <div class="comparison-label">${c.label} <span class="gain-badge ${gainCls}">${gain > 0 ? '-' : '+'}${Math.abs(gain)}%</span></div>
+                <div class="comparison-values"><span>Avant: ${formatBytes(b)}</span><span>Après: ${formatBytes(o)}</span></div>
+                <div class="bar-container">
+                    <div class="bar baseline" style="width:${(b/maxBytes*100).toFixed(1)}%">${formatBytes(b)}</div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar optimized" style="width:${(o/maxBytes*100).toFixed(1)}%">${formatBytes(o)}</div>
+                </div>
+            </div>`;
+    }
+
+    // Key metrics
+    const metricsCard = document.getElementById('metrics-card');
+    metricsCard.style.display = 'block';
+    const mg = document.getElementById('metrics-grid');
+    const bFull = m.baseline?.full_payload?.size_download || 0;
+    const oFields = m.optimized?.fields_filter?.size_download || 0;
+    const oGzip = m.optimized?.gzip_compression?.size_download || 0;
+    const etag304 = m.optimized?.etag_304?.http_code || 0;
+    const totalGain = bFull > 0 ? Math.round((1 - oGzip / bFull) * 100) : 0;
+
+    mg.innerHTML = `
+        <div class="metric-item"><div class="metric-value">${formatBytes(bFull)}</div><div class="metric-label">Baseline payload</div></div>
+        <div class="metric-item"><div class="metric-value">${formatBytes(oGzip)}</div><div class="metric-label">Optimized + Gzip</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${totalGain>50?'var(--green-400)':'var(--yellow-400)'}">${totalGain}%</div><div class="metric-label">Réduction totale</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${etag304===304?'var(--green-400)':'var(--red-400)'}">${etag304}</div><div class="metric-label">HTTP code ETag</div></div>
+    `;
+
+    // Measurements table
+    const tableCard = document.getElementById('table-card');
+    tableCard.style.display = 'block';
+    const tbody = document.getElementById('measurements-body');
+    tbody.innerHTML = '';
+
+    const rows = [
+        { ep: 'GET /books (baseline)', ...m.baseline?.full_payload, rule: '—' },
+        { ep: 'GET /books/1 (baseline)', ...m.baseline?.single_resource, rule: '—' },
+        { ep: 'GET /books?page&size', ...m.optimized?.pagination, rule: 'DE11' },
+        { ep: 'GET /books/select?fields', ...m.optimized?.fields_filter, rule: 'DE08' },
+        { ep: 'GET /books/select (gzip)', ...m.optimized?.gzip_compression, rule: 'DE01' },
+        { ep: 'GET /books/1 (ETag 1st)', ...m.optimized?.etag_first_call, rule: 'DE02' },
+        { ep: 'GET /books/1 (ETag 304)', ...m.optimized?.etag_304, rule: 'DE02/03' },
+        { ep: 'GET /books/changes', ...m.optimized?.delta_changes, rule: 'DE06' },
+        { ep: 'GET /books/1/summary (206)', ...m.optimized?.range_206, rule: '206' },
+        { ep: 'GET /books/cbor', ...m.optimized?.cbor_format, rule: 'AR02' },
+    ];
+
+    for (const r of rows) {
+        const code = r.http_code || 0;
+        const codeColor = code === 304 ? 'var(--blue-400)' : code === 206 ? 'var(--yellow-400)' : code === 200 ? 'var(--green-400)' : 'var(--red-400)';
+        tbody.innerHTML += `<tr>
+            <td>${r.ep}</td>
+            <td style="color:${codeColor};font-weight:700;">${code}</td>
+            <td>${formatBytes(r.size_download || 0)}</td>
+            <td>${(r.time_total || 0).toFixed(3)}</td>
+            <td><span style="color:var(--green-400)">${r.rule}</span></td>
+        </tr>`;
+    }
+
+    // History
+    renderHistory();
+}
+
+function renderHistory() {
+    const card = document.getElementById('history-card');
+    if (history.length < 1) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    const canvas = document.getElementById('timeline-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 200 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '200px';
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 200;
+    const pad = { top: 20, right: 30, bottom: 40, left: 50 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+        ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText((100 - 25 * i).toString(), pad.left - 8, y + 4);
+    }
+
+    // Plot
+    if (history.length === 1) {
+        const x = pad.left + plotW / 2;
+        const y = pad.top + plotH * (1 - history[0].total / 100);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+        ctx.fillStyle = '#d1d5db'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(history[0].total + ' (' + history[0].grade + ')', x, y - 12);
+        ctx.fillText(history[0].timestamp.slice(0, 10), x, H - 8);
+    } else {
+        const n = history.length;
+        const stepX = plotW / (n - 1);
+
+        // Line
+        ctx.beginPath();
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2.5;
+        for (let i = 0; i < n; i++) {
+            const x = pad.left + stepX * i;
+            const y = pad.top + plotH * (1 - history[i].total / 100);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Points + labels
+        for (let i = 0; i < n; i++) {
+            const x = pad.left + stepX * i;
+            const y = pad.top + plotH * (1 - history[i].total / 100);
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = history[i].total >= 80 ? '#22c55e' : history[i].total >= 50 ? '#eab308' : '#ef4444';
+            ctx.fill();
+            ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(history[i].total + '', x, y - 10);
+            if (i % Math.max(1, Math.floor(n / 6)) === 0 || i === n - 1) {
+                ctx.fillText(history[i].timestamp.slice(5, 10), x, H - 8);
+            }
+        }
+    }
+}
+
+// ─── Helpers ───────────────────────────────────────────────────
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+async function exportPng() {
+    try {
+        // Lazy-load html2canvas from CDN
+        if (!window.html2canvas) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        const node = document.body;
+        const canvas = await window.html2canvas(node, { backgroundColor: '#111827', scale: 2 });
+        const link = document.createElement('a');
+        link.download = `green-score-dashboard-${new Date().toISOString().slice(0,19)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (err) {
+        alert('Export PNG indisponible. Vérifiez votre connexion réseau.');
+        console.error(err);
+    }
+}
+
+// ─── Sample Data ───────────────────────────────────────────────
+function loadSampleData() {
+    const sample = {
+        "timestamp": "2026-03-09T10:30:00Z",
+        "green_score": {
+            "total": 82,
+            "max": 100,
+            "grade": "A",
+            "breakdown": {
+                "DE11_pagination": 14.5,
+                "DE08_fields": 13.2,
+                "DE01_compression": 12.8,
+                "DE02_DE03_cache": 15,
+                "DE06_delta": 8,
+                "range_206": 10,
+                "LO01_observability": 5,
+                "US07_rate_limit": 5,
+                "AR02_format_cbor": 0
+            },
+            "details": {
+                "DE11_pagination": { "baseline_bytes": 48500000, "optimized_bytes": 1940, "reduction_pct": 99.99 },
+                "DE08_fields": { "paginated_bytes": 1940, "filtered_bytes": 820, "reduction_pct": 57.7 },
+                "DE01_compression": { "uncompressed_bytes": 3200, "gzip_bytes": 480, "reduction_pct": 85.0 },
+                "DE02_DE03_cache": { "http_code": 304, "body_bytes": 0, "note": "perfect 304" },
+                "DE06_delta": { "delta_bytes": 2, "note": "delta endpoint active" },
+                "range_206": { "http_code": 206, "bytes": 200, "note": "partial content supported" },
+                "LO01_observability": { "note": "PayloadLoggingFilter detected" },
+                "US07_rate_limit": { "note": "RateLimitFilter detected" },
+                "AR02_format_cbor": { "note": "not measured" }
+            }
+        },
+        "measurements": {
+            "baseline": {
+                "full_payload": { "http_code": 200, "size_download": 48500000, "time_total": 4.523, "speed_download": 10725000 },
+                "single_resource": { "http_code": 200, "size_download": 142, "time_total": 0.008, "speed_download": 17750 },
+                "single_repeat": { "http_code": 200, "size_download": 142, "time_total": 0.006, "speed_download": 23666 }
+            },
+            "optimized": {
+                "pagination": { "http_code": 200, "size_download": 1940, "time_total": 0.012, "speed_download": 161666 },
+                "fields_filter": { "http_code": 200, "size_download": 820, "time_total": 0.009, "speed_download": 91111 },
+                "gzip_compression": { "http_code": 200, "size_download": 480, "time_total": 0.011, "speed_download": 43636 },
+                "etag_first_call": { "http_code": 200, "size_download": 185, "time_total": 0.005, "speed_download": 37000 },
+                "etag_304": { "http_code": 304, "size_download": 0, "time_total": 0.003, "speed_download": 0 },
+                "delta_changes": { "http_code": 200, "size_download": 2, "time_total": 0.018, "speed_download": 111 },
+                "range_206": { "http_code": 206, "size_download": 200, "time_total": 0.004, "speed_download": 50000 },
+                "cbor_format": { "http_code": 200, "size_download": 38200000, "time_total": 3.8, "speed_download": 10052631 },
+                "full_payload": { "http_code": 200, "size_download": 48500000, "time_total": 4.1, "speed_download": 11829268 }
+            }
+        }
+    };
+    addToHistory(sample);
+
+    // Add a couple more historical points for demo
+    const h1 = { timestamp: "2026-02-15T14:00:00Z", total: 35, grade: "D", breakdown: {} };
+    const h2 = { timestamp: "2026-02-22T10:00:00Z", total: 58, grade: "C", breakdown: {} };
+    const h3 = { timestamp: "2026-03-01T09:00:00Z", total: 72, grade: "B", breakdown: {} };
+    [h1, h2, h3].forEach(h => {
+        if (!history.find(x => x.timestamp === h.timestamp)) history.push(h);
+    });
+    history.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+
+    renderReport(sample);
+}
+
+// ─── Auto-load latest if served from same origin ───────────────
+window.addEventListener('DOMContentLoaded', () => {
+    fetch('../reports/latest-report.json')
+        .then(r => { if (!r.ok) throw new Error('no report'); return r.json(); })
+        .then(report => { addToHistory(report); renderReport(report); })
+        .catch(() => { /* no latest report, show empty state */ });
+    renderHistory();
+});
+
+window.addEventListener('resize', () => { if (history.length > 0) renderHistory(); });
+</script>
+</body>
+</html>
+

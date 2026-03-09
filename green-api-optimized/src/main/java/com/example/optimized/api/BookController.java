@@ -2,9 +2,13 @@ package com.example.optimized.api;
 
 import com.example.optimized.domain.Book;
 import com.example.optimized.repo.BookRepository;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
@@ -16,63 +20,69 @@ import static com.example.optimized.api.BookReactiveController.getBookResponseEn
 
 @RestController
 @RequestMapping("/books")
+@Validated
 public class BookController {
     private final BookRepository repo;
     public BookController(BookRepository repo) { this.repo = repo; }
 
+    // Full list (non-paginé — pour comparaison avec baseline)
     @GetMapping
     public List<Book> all() { return repo.findAll(); }
 
-
-
-
-
+    // Ressource unitaire sans cache (pour comparaison)
     @GetMapping("noCache/{id}")
-    public Book byId(@PathVariable("id") long id) { return repo.findById(id).get(); }
+    public ResponseEntity<Book> byId(@PathVariable("id") long id) {
+        return repo.findById(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
 
+    // DE11 — Pagination simple (size borné ≤ 100)
+    private static final int MAX_PAGE_SIZE = 100;
 
-
-
-
-
-
-
-
-
-
-    // Pagination simple
     @GetMapping(params = {"page","size"})
-    public List<Book> page(@RequestParam("page") int page, @RequestParam("size") int size){
+    public List<Book> page(
+        @RequestParam("page") @Min(0) int page,
+        @RequestParam("size") @Min(1) @Max(MAX_PAGE_SIZE) int size
+    ){
+        size = Math.max(1, Math.min(size, MAX_PAGE_SIZE)); // Borne DE11
         var all = repo.findAll();
         int from = Math.max(0, Math.min(page * size, all.size()));
         int to   = Math.max(from, Math.min(from + size, all.size()));
         return all.subList(from, to);
     }
 
+    // Batching — réduire N appels en 1 (AR02)
+    @GetMapping("/batch")
+    public List<Book> batch(@RequestParam("ids") @Size(min = 1, max = MAX_PAGE_SIZE) List<Long> ids) {
+        return ids.stream()
+            .limit(MAX_PAGE_SIZE)
+            .map(repo::findById)
+            .flatMap(Optional::stream)
+            .toList();
+    }
 
 
-
-
-    // Filtrage de champs
+    // DE08/US01 — Filtrage de champs (whitelist, summary exclu par défaut)
     @GetMapping(value = "/select")
-    public List<Object> select(
+    public List<Map<String, Object>> select(
         @RequestParam(name = "fields", defaultValue = "id,title,author") String fields,
-        @RequestParam(name = "page",defaultValue = "0") int page,
-        @RequestParam(name = "size", defaultValue = "20") int size
+        @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+        @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) int size
     ){
-        var wanted = new LinkedHashSet<>(Arrays.asList(fields.split(",")));
+        var wanted = FieldSelector.parse(fields);
         var slice = page(page, size);
-        return Collections.singletonList(slice.stream().map(b -> {
+        return slice.stream().map(b -> {
                     var m = new LinkedHashMap<String, Object>();
                     if (wanted.contains("id")) m.put("id", b.getId());
                     if (wanted.contains("title")) m.put("title", b.getTitle());
                     if (wanted.contains("author")) m.put("author", b.getAuthor());
-                    if (wanted.contains("yea")) m.put("year", b.getYea());
+                    if (wanted.contains("year")) m.put("year", b.getYea());
                     if (wanted.contains("pages")) m.put("pages", b.getPages());
                     if (wanted.contains("summary")) m.put("summary", b.getSummary());
-                    return m;
+                    return (Map<String, Object>) m;
                 }
-        ).toList());
+        ).toList();
     }
 
     // Ressource unitaire avec ETag + Last-Modified

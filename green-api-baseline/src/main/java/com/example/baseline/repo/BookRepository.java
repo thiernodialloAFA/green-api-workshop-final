@@ -1,6 +1,7 @@
 package com.example.baseline.repo;
 
 import com.example.baseline.domain.Book;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -11,9 +12,10 @@ import java.util.stream.LongStream;
 public class BookRepository {
     private final List<Book> data;
 
-    public BookRepository() {
+    public BookRepository(@Value("${app.dataset.size:1000000}") int size) {
         data = new ArrayList<>();
-        LongStream.rangeClosed(1, 500000).forEach(i ->
+        int safeSize = Math.max(1, size);
+        LongStream.rangeClosed(1, safeSize).forEach(i ->
             data.add(new Book(
                 i,
                 "Title " + i,

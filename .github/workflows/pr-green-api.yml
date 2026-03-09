@@ -1,83 +1,193 @@
-name: PR Green API Checks
+name: "🌿 Green API Score CI"
 
 on:
+  push:
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: pr-green-api-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  JAVA_VERSION: '17'
+
 jobs:
   build:
+    name: "🔨 Build"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup JDK 17
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'maven'
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
       - name: Build baseline
-        run: mvn -q -DskipTests -f baseline/pom.xml package
+        run: mvn -q -DskipTests -f green-api-baseline/pom.xml package
       - name: Build optimized
-        run: mvn -q -DskipTests -f optimized/pom.xml package
+        run: mvn -q -DskipTests -f green-api-optimized/pom.xml package
+      - name: Upload jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: jars
+          path: |
+            green-api-baseline/target/*.jar
+            green-api-optimized/target/*.jar
 
-  smoke-tests:
+  green-score:
+    name: "🌿 Green Score Analysis"
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup JDK 17
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
       - name: Start baseline (8080)
         run: |
-          nohup java -jar baseline/target/green-api-baseline-0.0.1-SNAPSHOT.jar > baseline.log 2>&1 &
+          nohup java -jar green-api-baseline/target/green-api-baseline-0.0.1-SNAPSHOT.jar > baseline.log 2>&1 &
           echo $! > baseline.pid
       - name: Start optimized (8081)
         run: |
-          nohup java -jar optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > optimized.log 2>&1 &
+          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > optimized.log 2>&1 &
           echo $! > optimized.pid
       - name: Wait for services
         run: |
-          for i in {1..40}; do
-            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 &&                curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1; then
-              echo "Services are up"; break; fi; sleep 2; done
-      - name: Smoke — baseline
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 && \
+               curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1; then
+              echo "✅ Both services are up"; break
+            fi
+            sleep 2
+          done
+      - name: Run Green Score Analyzer
         run: |
-          chmod +x scripts/measure_baseline.sh
-          BASE=http://localhost:8080 scripts/measure_baseline.sh | tee baseline.out
-      - name: Smoke — optimized
+          chmod +x scripts/green-score-analyzer.sh
+          BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash scripts/green-score-analyzer.sh
+
+      - name: Generate Green Score badge
         run: |
-          chmod +x scripts/measure_optimized.sh
-          BASE=http://localhost:8081 scripts/measure_optimized.sh | tee optimized.out
-      - name: Assertions (payload ratio & 304)
+          chmod +x scripts/generate-badge.sh
+          bash scripts/generate-badge.sh reports/latest-report.json badges/green-score.svg || true
+
+      - name: Assertions — payload & 304 & Green Score
         shell: bash
         run: |
           set -e
-          base_size=$(curl --retry 5 --retry-delay 2 -s -w 'size=%{size_download}
-' -o /dev/null http://localhost:8080/books | awk -F= '/^size/ {print $2}')
-          opt_size=$(curl --retry 5 --retry-delay 2 -s -w 'size=%{size_download}
-' -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50" | awk -F= '/^size/ {print $2}')
-          echo "Baseline size: $base_size" >> $GITHUB_STEP_SUMMARY
-          echo "Optimized size (select 50): $opt_size" >> $GITHUB_STEP_SUMMARY
-          if [ "$opt_size" -ge $(( base_size / 10 )) ]; then
-            echo "❌ Optimized payload not small enough vs baseline (expected < baseline/10)" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          else
-            echo "✅ Optimized payload at least 10x smaller than baseline" >> $GITHUB_STEP_SUMMARY
+          REPORT="reports/latest-report.json"
+          echo "=== Green Score Report ==="
+          python3 -m json.tool "$REPORT"
+
+          TOTAL=$(python3 -c "import json;print(json.load(open('$REPORT'))['green_score']['total'])")
+          GRADE=$(python3 -c "import json;print(json.load(open('$REPORT'))['green_score']['grade'])")
+          echo "## 🌿 Green Score: ${TOTAL}/100 (Grade: ${GRADE})" >> $GITHUB_STEP_SUMMARY
+
+          # Assert pagination < baseline/10
+          B_SIZE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['baseline']['full_payload']['size_download'])")
+          O_SIZE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['optimized']['pagination']['size_download'])")
+          echo "Baseline: ${B_SIZE} bytes | Optimized paginated: ${O_SIZE} bytes" >> $GITHUB_STEP_SUMMARY
+          python3 -c "
+          b=$B_SIZE; o=$O_SIZE
+          assert o < b / 10, f'FAIL: optimized ({o}) >= baseline/10 ({b/10})'
+          print('✅ Pagination assertion PASSED')
+          "
+
+          # Assert 304
+          ETAG_CODE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['optimized']['etag_304']['http_code'])")
+          python3 -c "
+          assert $ETAG_CODE == 304, f'FAIL: expected 304, got $ETAG_CODE'
+          print('✅ ETag 304 assertion PASSED')
+          "
+
+          # Assert Green Score >= 50
+          python3 -c "
+          assert $TOTAL >= 50, f'FAIL: Green Score {$TOTAL} < 50'
+          print('✅ Green Score >= 50 PASSED')
+          "
+
+          # Regression gate (optional): green-score-threshold.json
+          if [ -f green-score-threshold.json ]; then
+            MIN_SCORE=$(python3 -c "import json;print(json.load(open('green-score-threshold.json'))['minScore'])")
+            echo "Min score threshold: ${MIN_SCORE}" >> $GITHUB_STEP_SUMMARY
+            python3 -c "
+            total=$TOTAL; minimum=$MIN_SCORE
+            assert total >= minimum, f'FAIL: Green Score {total} < threshold {minimum}'
+            print('✅ Green Score threshold PASSED')
+            "
           fi
-          etag=$(curl -sI "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20" | awk -F': ' '/^ETag:/ {print $2}' | tr -d '')
-          code=$(curl -s -o /dev/null -w '%{http_code}' -H "If-None-Match: $etag" "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20")
-          echo "ETag: $etag, 304 code: $code" >> $GITHUB_STEP_SUMMARY
-          test "$code" = "304"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: green-score-report
+          path: reports/
+
+      - name: Upload badge
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: green-score-badge
+          path: badges/
+
+      - name: Comment PR with Green Score
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('reports/latest-report.json', 'utf8'));
+            const gs = report.green_score;
+            const emoji = gs.total >= 80 ? '🟢' : gs.total >= 50 ? '🟡' : '🔴';
+
+            let body = `## ${emoji} Green API Score: **${gs.total}/100** (Grade: **${gs.grade}**)\n\n`;
+            body += `| Règle | Score | Max |\n|---|---|---|\n`;
+
+            const labels = {
+              'DE11_pagination': 'DE11 Pagination',
+              'DE08_fields': 'DE08 Filtrage champs',
+              'DE01_compression': 'DE01 Compression',
+              'DE02_DE03_cache': 'DE02/03 Cache ETag',
+              'DE06_delta': 'DE06 Delta',
+              'range_206': '206 Range',
+              'LO01_observability': 'LO01 Observabilité',
+              'US07_rate_limit': 'US07 Rate Limit',
+              'AR02_format_cbor': 'AR02 CBOR',
+            };
+            const maxScores = {
+              DE11_pagination: 15, DE08_fields: 15, DE01_compression: 15,
+              DE02_DE03_cache: 15, DE06_delta: 10, range_206: 10,
+              LO01_observability: 5, US07_rate_limit: 5, AR02_format_cbor: 10
+            };
+
+            for (const [key, label] of Object.entries(labels)) {
+              const score = gs.breakdown[key] || 0;
+              const max = maxScores[key] || 0;
+              const icon = score >= max * 0.75 ? '✅' : score >= max * 0.4 ? '⚠️' : '❌';
+              body += `| ${icon} ${label} | ${score} | ${max} |\n`;
+            }
+            body += `\n📅 *${report.timestamp}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
       - name: Upload logs (on failure)
         if: failure()
         uses: actions/upload-artifact@v4
@@ -86,10 +196,38 @@ jobs:
           path: |
             baseline.log
             optimized.log
-            baseline.out
-            optimized.out
+
       - name: Stop services
         if: always()
         run: |
-          kill $(cat baseline.pid) || true
-          kill $(cat optimized.pid) || true
+          kill $(cat baseline.pid) 2>/dev/null || true
+          kill $(cat optimized.pid) 2>/dev/null || true
+
+  spectral-lint:
+    name: "🔬 Spectral OpenAPI Lint"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+      - name: Start optimized
+        run: |
+          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > opt.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1 && break
+            sleep 2
+          done
+      - name: Fetch OpenAPI spec
+        run: curl -s http://localhost:8081/v3/api-docs -o openapi.json
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli
+      - name: Run Spectral with Green API rules
+        run: spectral lint openapi.json --ruleset .spectral.yml --format stylish || true
