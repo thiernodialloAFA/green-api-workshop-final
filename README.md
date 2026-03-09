@@ -16,6 +16,11 @@
 Appliquer pas à pas le framework **[API Green Score](https://github.com/API-Green-Score/APIGreenScore)** sur une API réelle, avec des **outils open-source** et des **métriques concrètes**, pour obtenir une API plus légère, plus rapide, et un impact environnemental réduit.
 
 ## 📐 Règles API Green Score couvertes
+Practical workshop (50 min) to reduce the footprint of HTTP APIs by applying the **API Green Score** rules:
+- **DE11** Pagination, **DE08** Filtering, **US01** Query params
+- **DE01/USXX** Compression (Gzip), **DE02/DE03** HTTP Cache (ETag/304)
+- **DE06/US04** Delta (changes since), **206** Partial Content (Range)
+- Useful logs (**LO01**) & error monitoring (**US07**)
 
 | Catégorie | Règle | Description | Points |
 |-----------|-------|-------------|--------|
@@ -166,3 +171,7 @@ curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" htt
 ## 📄 Licence
 
 MIT — Libre d'utilisation, de modification et de redistribution.
+## Useful Documents
+- [Green API Checklist (PR)](CHECKLIST.md)
+- Workshop slides: `docs/slides/Green-API-Workshop.pptx`
+- [Turnkey workshop guide](WORKSHOP.md)

@@ -77,6 +77,7 @@ public class BookController {
                     if (wanted.contains("id")) m.put("id", b.getId());
                     if (wanted.contains("title")) m.put("title", b.getTitle());
                     if (wanted.contains("author")) m.put("author", b.getAuthor());
+                    if (wanted.contains("published_date")) m.put("published_date", b.getPublished_date());
                     if (wanted.contains("year")) m.put("year", b.getYea());
                     if (wanted.contains("pages")) m.put("pages", b.getPages());
                     if (wanted.contains("summary")) m.put("summary", b.getSummary());
@@ -170,5 +171,17 @@ public class BookController {
             var opt = repo.findById(id);
             return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         });
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Book> updateBook(
+            @PathVariable("id") long id,
+            @RequestBody Book updatedBook
+    ) {
+        Book book = repo.updateBook(id, updatedBook);
+        if (book == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(book);
     }
 }

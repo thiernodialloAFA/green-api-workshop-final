@@ -48,8 +48,30 @@ public class BookRepository {
         var ver = version.incrementAndGet();
         var old = data.get(id);
         if (old == null) return null;
+        var updated = new Book(old.getId(), old.getTitle(), old.getAuthor(), old.getPublished_date(), old.getPages(), newSummary, now, ver);
         var updated = new Book(old.getId(), old.getTitle(), old.getAuthor(), old.getYea(), old.getPages(), newSummary, now, ver);
         data.put(id, updated);
         return updated;
     }
+
+    public Book updateBook(long id, Book updatedBook) {
+        var old = data.get(id);
+        if (old == null) return null;
+        var now = Instant.now();
+        var ver = version.incrementAndGet();
+        var book = new Book(
+                id,
+                updatedBook.getTitle(),
+                updatedBook.getAuthor(),
+                updatedBook.getPublished_date(),
+                updatedBook.getPages(),
+                updatedBook.getSummary(),
+                now,
+                ver
+        );
+        data.put(id, book);
+        return book;
+    }
+
+
 }
