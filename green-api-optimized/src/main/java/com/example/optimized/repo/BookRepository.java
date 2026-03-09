@@ -49,7 +49,6 @@ public class BookRepository {
         var old = data.get(id);
         if (old == null) return null;
         var updated = new Book(old.getId(), old.getTitle(), old.getAuthor(), old.getPublished_date(), old.getPages(), newSummary, now, ver);
-        var updated = new Book(old.getId(), old.getTitle(), old.getAuthor(), old.getYea(), old.getPages(), newSummary, now, ver);
         data.put(id, updated);
         return updated;
     }

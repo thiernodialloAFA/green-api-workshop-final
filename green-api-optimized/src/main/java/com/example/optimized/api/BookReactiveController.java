@@ -45,7 +45,7 @@ public class BookReactiveController {
     @GetMapping("/cacheable")
     public Mono<List<Book>> allBooks() {
         log.info("Fetching all books with cache");
-        return Mono.justOrEmpty(bookService.findAllCached());
+        return Mono.justOrEmpty(bookService.findAllCachedList());
     }
 
 
@@ -78,7 +78,6 @@ public class BookReactiveController {
                 if (wanted.contains("title")) m.put("title", b.getTitle());
                 if (wanted.contains("author")) m.put("author", b.getAuthor());
                 if (wanted.contains("published_date")) m.put("published_date", b.getPublished_date());
-                if (wanted.contains("year")) m.put("year", b.getYea());
                 if (wanted.contains("pages")) m.put("pages", b.getPages());
                 if (wanted.contains("summary")) m.put("summary", b.getSummary());
                 return m;

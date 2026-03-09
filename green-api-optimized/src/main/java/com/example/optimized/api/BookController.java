@@ -78,7 +78,6 @@ public class BookController {
                     if (wanted.contains("title")) m.put("title", b.getTitle());
                     if (wanted.contains("author")) m.put("author", b.getAuthor());
                     if (wanted.contains("published_date")) m.put("published_date", b.getPublished_date());
-                    if (wanted.contains("year")) m.put("year", b.getYea());
                     if (wanted.contains("pages")) m.put("pages", b.getPages());
                     if (wanted.contains("summary")) m.put("summary", b.getSummary());
                     return (Map<String, Object>) m;
