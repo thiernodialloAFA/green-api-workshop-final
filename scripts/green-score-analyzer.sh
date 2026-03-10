@@ -393,6 +393,11 @@ if [ -f "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-badge.sh" ]; then
   bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-badge.sh" "$LATEST_LINK" "$(cd "$(dirname "$0")/.." && pwd)/badges/green-score.svg" || true
 fi
 
+# Generate dashboard (non-blocking)
+if [ -f "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-dashboard.sh" ]; then
+  bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-dashboard.sh" "$LATEST_LINK" "$(cd "$(dirname "$0")/.." && pwd)/dashboard/index.save.html" "$(cd "$(dirname "$0")/.." && pwd)/dashboard/index.html" || true
+fi
+
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}📄 Report saved to: ${REPORT_FILE}${NC}"

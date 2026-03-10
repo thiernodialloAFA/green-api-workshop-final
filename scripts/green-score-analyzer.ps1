@@ -232,6 +232,12 @@ if (Test-Path $badgeScript) {
   & $badgeScript $LatestLink (Join-Path $RootDir "badges\green-score.svg") | Out-Null
 }
 
+# Generate dashboard (non-blocking)
+$dashboardScript = Join-Path $RootDir "scripts\generate-dashboard.ps1"
+if (Test-Path $dashboardScript) {
+  & $dashboardScript $LatestLink "dashboard\index.save.html" "dashboard\index.html" | Out-Null
+}
+
 $json | Write-Host
 
 Write-Host ""
