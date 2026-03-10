@@ -429,15 +429,16 @@ function renderReport(report) {
     const rtBars = document.getElementById('response-times-bars');
     rtBars.innerHTML = '';
 
+    const bFullTime = m.baseline?.full_payload?.time_total || 0;
     const timeComparisons = [
-        { label: 'GET /books (full)', baseline: m.baseline?.full_payload?.time_total, optimized: m.optimized?.full_payload?.time_total },
-        { label: 'GET /books (paginated)', baseline: m.baseline?.full_payload?.time_total, optimized: m.optimized?.pagination?.time_total },
-        { label: 'GET /books/select (fields)', baseline: m.baseline?.full_payload?.time_total, optimized: m.optimized?.fields_filter?.time_total },
-        { label: 'GET /books (gzip)', baseline: m.optimized?.fields_filter?.time_total, optimized: m.optimized?.gzip_compression?.time_total },
-        { label: 'GET /books/1 (1er appel)', baseline: m.baseline?.single_resource?.time_total, optimized: m.optimized?.etag_first_call?.time_total },
-        { label: 'GET /books/1 (ETag 304)', baseline: m.baseline?.single_repeat?.time_total, optimized: m.optimized?.etag_304?.time_total },
-        { label: 'GET /books/changes (delta)', baseline: null, optimized: m.optimized?.delta_changes?.time_total },
-        { label: 'GET /books/1/summary (range)', baseline: null, optimized: m.optimized?.range_206?.time_total },
+        { label: 'GET /books (full)', baseline: bFullTime, optimized: m.optimized?.full_payload?.time_total },
+        { label: 'GET /books (paginated)', baseline: bFullTime, optimized: m.optimized?.pagination?.time_total },
+        { label: 'GET /books/select (fields)', baseline: bFullTime, optimized: m.optimized?.fields_filter?.time_total },
+        { label: 'GET /books (gzip)', baseline: bFullTime, optimized: m.optimized?.gzip_compression?.time_total },
+        { label: 'GET /books/1 (1er appel)', baseline: bFullTime, optimized: m.optimized?.etag_first_call?.time_total },
+        { label: 'GET /books/1 (ETag 304)', baseline: bFullTime, optimized: m.optimized?.etag_304?.time_total },
+        { label: 'GET /books/changes (delta)', baseline: bFullTime, optimized: m.optimized?.delta_changes?.time_total },
+        { label: 'GET /books/1/summary (range)', baseline: bFullTime, optimized: m.optimized?.range_206?.time_total },
     ];
 
     const maxTime = Math.max(...timeComparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 0.001);
@@ -449,21 +450,21 @@ function renderReport(report) {
         if (bt > 0 && ot > 0) {
             const speedup = Math.round((1 - ot / bt) * 100);
             const cls = speedup > 0 ? 'faster' : 'slower';
-            speedupHtml = `<span class="time-speedup ${cls}">${speedup > 0 ? '⚡' : '🐢'} ${speedup > 0 ? '-' : '+'}${Math.abs(speedup)}%</span>`;
+            speedupHtml = `<span class=\"time-speedup ${cls}\">${speedup > 0 ? '⚡' : '🐢'} ${speedup > 0 ? '-' : '+'}${Math.abs(speedup)}%</span>`;
         }
         rtBars.innerHTML += `
-            <div class="time-row">
-                <div class="endpoint-label">${tc.label} ${speedupHtml}</div>
+            <div class=\"time-row\">
+                <div class=\"endpoint-label\">${tc.label} ${speedupHtml}</div>
                 ${bt > 0 ? `
-                <div class="time-pair">
-                    <div class="label">Avant</div>
-                    <div class="bar-container"><div class="bar time-baseline" style="width:${(bt/maxTime*100).toFixed(1)}%"></div></div>
-                    <div class="value">${bt.toFixed(3)}s</div>
+                <div class=\"time-pair\">
+                    <div class=\"label\">Full naive</div>
+                    <div class=\"bar-container\"><div class=\"bar time-baseline\" style=\"width:${(bt/maxTime*100).toFixed(1)}%\"></div></div>
+                    <div class=\"value\">${bt.toFixed(3)}s</div>
                 </div>` : ''}
-                <div class="time-pair">
-                    <div class="label">${bt > 0 ? 'Après' : 'Temps'}</div>
-                    <div class="bar-container"><div class="bar time-optimized" style="width:${(ot/maxTime*100).toFixed(1)}%"></div></div>
-                    <div class="value">${ot.toFixed(3)}s</div>
+                <div class=\"time-pair\">
+                    <div class=\"label\">Mesure</div>
+                    <div class=\"bar-container\"><div class=\"bar time-optimized\" style=\"width:${(ot/maxTime*100).toFixed(1)}%\"></div></div>
+                    <div class=\"value\">${ot.toFixed(3)}s</div>
                 </div>
             </div>`;
     }
@@ -734,4 +735,6 @@ window.addEventListener('resize', () => { if (history.length > 0) renderHistory(
 </script>
 </body>
 </html>
+
+
 
