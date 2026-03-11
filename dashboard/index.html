@@ -242,6 +242,13 @@
             <div class="metric-grid" id="metrics-grid"></div>
         </div>
 
+        <!-- Energy Summary -->
+        <div class="card" id="energy-card" style="display:none;">
+            <h2>⚡ Résumé énergie</h2>
+            <div class="metric-grid" id="energy-grid"></div>
+            <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);">Modèle : réseau 0.06 kWh/GB (The Shift Project) + serveur 25W estimé.</p>
+        </div>
+
         <!-- Measurements Table -->
         <div class="card" id="table-card" style="display:none;grid-column:1/-1;">
             <h2>📐 Détail des mesures</h2>
@@ -253,6 +260,9 @@
                             <th>HTTP</th>
                             <th>Taille (bytes)</th>
                             <th>Temps (s)</th>
+                            <th>⚡ Énergie réseau (Wh)</th>
+                            <th>⚡ Énergie serveur (Wh)</th>
+                            <th>⚡ Énergie totale (Wh)</th>
                             <th>Règle</th>
                         </tr>
                     </thead>
@@ -506,6 +516,41 @@ function renderReport(report) {
         <div class="metric-item"><div class="metric-value">${gs.total}/${maxScore}</div><div class="metric-label">Score (${gs.grade})</div></div>
     `;
 
+    // ─── Energy Summary card ───────────────────────────────────────
+    const energyCard = document.getElementById('energy-card');
+    energyCard.style.display = 'block';
+    const eg = document.getElementById('energy-grid');
+
+    // Baseline energy (full naive)
+    const baselineEnergyNet = energyNetworkWh(bFull);
+    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
+    const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
+
+    // Optimized energy (sum of all optimized endpoints)
+    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    let optEnergyNet = 0, optEnergySrv = 0;
+    for (const k of optKeys) {
+        const ep = m.optimized?.[k];
+        if (ep) {
+            optEnergyNet += energyNetworkWh(ep.size_download || 0);
+            optEnergySrv += energyServerWh(ep.time_total || 0);
+        }
+    }
+    const optEnergyTotal = optEnergyNet + optEnergySrv;
+    const energyGainPct = baselineEnergyTotal > 0 ? Math.round((1 - optEnergyTotal / baselineEnergyTotal) * 100) : 0;
+    const energySaved = baselineEnergyTotal - optEnergyTotal;
+
+    eg.innerHTML = `
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${energyGainPct>0?'var(--green-400)':'var(--red-400)'}">⚡ ${energyGainPct}%</div><div class="metric-label">Gain énergie global</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée</div></div>
+    `;
+
     // Measurements table
     const tableCard = document.getElementById('table-card');
     tableCard.style.display = 'block';
@@ -528,11 +573,17 @@ function renderReport(report) {
     for (const r of rows) {
         const code = r.http_code || 0;
         const codeColor = code === 304 ? 'var(--blue-400)' : code === 206 ? 'var(--yellow-400)' : code === 200 ? 'var(--green-400)' : 'var(--red-400)';
+        const eNet = energyNetworkWh(r.size_download || 0);
+        const eSrv = energyServerWh(r.time_total || 0);
+        const eTotal = eNet + eSrv;
         tbody.innerHTML += `<tr>
             <td>${r.ep}</td>
             <td style="color:${codeColor};font-weight:700;">${code}</td>
             <td>${formatBytes(r.size_download || 0)}</td>
             <td>${(r.time_total || 0).toFixed(3)}</td>
+            <td>${formatEnergy(eNet)}</td>
+            <td>${formatEnergy(eSrv)}</td>
+            <td style="font-weight:700;color:var(--green-400)">${formatEnergy(eTotal)}</td>
             <td><span style="color:var(--green-400)">${r.rule}</span></td>
         </tr>`;
     }
@@ -628,6 +679,28 @@ function formatBytes(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// ─── Energy helpers ────────────────────────────────────────────
+const ENERGY_NETWORK_KWH_PER_GB = 0.06; // The Shift Project
+const ENERGY_SERVER_POWER_W = 25;        // Estimation serveur moyen
+
+function energyNetworkWh(bytes) {
+    // bytes → GB → kWh → Wh
+    return (bytes / (1024 * 1024 * 1024)) * ENERGY_NETWORK_KWH_PER_GB * 1000;
+}
+function energyServerWh(timeSeconds) {
+    // seconds × W / 3600 → Wh
+    return timeSeconds * (ENERGY_SERVER_POWER_W / 3600);
+}
+function energyTotalWh(bytes, timeSeconds) {
+    return energyNetworkWh(bytes) + energyServerWh(timeSeconds);
+}
+function formatEnergy(wh) {
+    if (!isFinite(wh) || wh === 0) return '—';
+    if (wh < 0.001) return (wh * 1000).toFixed(3) + ' mWh';
+    if (wh < 1) return wh.toFixed(4) + ' Wh';
+    return wh.toFixed(2) + ' Wh';
 }
 
 async function exportPng() {
