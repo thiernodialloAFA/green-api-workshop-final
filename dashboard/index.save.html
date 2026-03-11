@@ -395,11 +395,15 @@ function renderReport(report) {
     const compBars = document.getElementById('comparison-bars');
     compBars.innerHTML = '';
 
+    const fullNaiveBytes = m.baseline?.full_payload?.size_download || 0;
     const comparisons = [
-        { label: 'Full payload (all books)', baseline: m.baseline?.full_payload?.size_download, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
-        { label: 'Paginated → Fields filter', baseline: m.optimized?.pagination?.size_download, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
-        { label: 'Fields → Gzip compressed', baseline: m.optimized?.fields_filter?.size_download, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
-        { label: 'Resource → ETag 304', baseline: m.optimized?.etag_first_call?.size_download, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
+        { label: 'Pagination (DE11)', baseline: fullNaiveBytes, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
+        { label: 'Fields filter (DE08)', baseline: fullNaiveBytes, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
+        { label: 'Gzip compression (DE01)', baseline: fullNaiveBytes, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
+        { label: 'ETag 304 (DE02)', baseline: fullNaiveBytes, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
+        { label: 'Delta changes (DE06)', baseline: fullNaiveBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06' },
+        { label: 'Range 206', baseline: fullNaiveBytes, optimized: m.optimized?.range_206?.size_download, rule: '206' },
+        { label: 'CBOR format (AR02)', baseline: fullNaiveBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02' },
     ];
 
     const maxBytes = Math.max(...comparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 1);
