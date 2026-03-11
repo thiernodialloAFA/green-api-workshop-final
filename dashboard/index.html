@@ -176,6 +176,50 @@
         .footer { text-align: center; margin-top: 40px; color: var(--gray-500); font-size: 0.85rem; }
         .footer a { color: var(--green-400); text-decoration: none; }
 
+        /* ─── Accordéon ─────────────────────────────────────── */
+        .accordion-toggle {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--green-400);
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 0;
+            text-align: left;
+            font-family: inherit;
+        }
+        .accordion-toggle:hover { color: var(--green-200); }
+        .accordion-toggle .chevron {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .accordion-toggle[aria-expanded="false"] .chevron {
+            transform: rotate(-90deg);
+        }
+        .accordion-toggle[aria-expanded="true"] .chevron {
+            transform: rotate(0deg);
+        }
+        .accordion-body {
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+            max-height: 5000px;
+            opacity: 1;
+        }
+        .accordion-body.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+        .accordion-body:not(.collapsed) {
+            margin-top: 16px;
+        }
+
         /* ─── Layout principal : sidebar + contenu ────────── */
         .dashboard-layout {
             display: flex;
@@ -375,61 +419,75 @@
 
         <!-- Rules Breakdown -->
         <div class="card" id="rules-card" style="display:none;">
-            <h2>📋 Détail par règle API Green Score</h2>
-            <div id="rules-list"></div>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📋 Détail par règle API Green Score <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="rules-accordion">
+                <div id="rules-list"></div>
+            </div>
         </div>
 
         <!-- Before/After Comparison -->
         <div class="card" id="comparison-card" style="display:none;">
-            <h2>📊 Avant / Après — Payload (bytes)</h2>
-            <div id="comparison-bars"></div>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📊 Avant / Après — Payload (bytes) <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="comparison-accordion">
+                <div id="comparison-bars"></div>
+            </div>
         </div>
 
         <!-- Response Times -->
         <div class="card" id="response-times-card" style="display:none;">
-            <h2>⏱️ Temps de réponse (secondes)</h2>
-            <div id="response-times-bars"></div>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">⏱️ Temps de réponse (secondes) <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="response-times-accordion">
+                <div id="response-times-bars"></div>
+            </div>
         </div>
 
         <!-- Key Metrics -->
         <div class="card" id="metrics-card" style="display:none;">
-            <h2>🔑 Métriques clés</h2>
-            <div class="metric-grid" id="metrics-grid"></div>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">🔑 Métriques clés <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="metrics-accordion">
+                <div class="metric-grid" id="metrics-grid"></div>
+            </div>
         </div>
 
         <!-- Energy Summary -->
         <div class="card" id="energy-card" style="display:none;">
-            <h2>⚡ Résumé énergie</h2>
-            <div class="metric-grid" id="energy-grid"></div>
-            <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);">Modèle : réseau 0.06 kWh/GB (The Shift Project) + serveur 25W estimé.</p>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">⚡ Résumé énergie <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="energy-accordion">
+                <div class="metric-grid" id="energy-grid"></div>
+                <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);">Modèle : réseau 0.06 kWh/GB (The Shift Project) + serveur 25W estimé.</p>
+            </div>
         </div>
 
         <!-- Measurements Table -->
         <div class="card" id="table-card" style="display:none;grid-column:1/-1;">
-            <h2>📐 Détail des mesures</h2>
-            <div style="overflow-x:auto;">
-                <table id="measurements-table">
-                    <thead>
-                        <tr>
-                            <th>Endpoint</th>
-                            <th>HTTP</th>
-                            <th>Taille (bytes)</th>
-                            <th>Temps (s)</th>
-                            <th>⚡ Énergie réseau (Wh)</th>
-                            <th>⚡ Énergie serveur (Wh)</th>
-                            <th>⚡ Énergie totale (Wh)</th>
-                            <th>Règle</th>
-                        </tr>
-                    </thead>
-                    <tbody id="measurements-body"></tbody>
-                </table>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📐 Détail des mesures <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="table-accordion">
+                <div style="overflow-x:auto;">
+                    <table id="measurements-table">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>HTTP</th>
+                                <th>Taille (bytes)</th>
+                                <th>Temps (s)</th>
+                                <th>⚡ Énergie réseau (Wh)</th>
+                                <th>⚡ Énergie serveur (Wh)</th>
+                                <th>⚡ Énergie totale (Wh)</th>
+                                <th>Règle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="measurements-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- History Timeline -->
         <div class="card" id="history-card" style="display:none;grid-column:1/-1;">
-            <h2>📈 Historique des scores</h2>
-            <canvas id="timeline-canvas"></canvas>
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📈 Historique des scores <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="history-accordion">
+                <canvas id="timeline-canvas"></canvas>
+            </div>
         </div>
         </div>
     </div><!-- /dashboard-main -->
@@ -829,6 +887,18 @@ function renderHistory() {
                 ctx.fillText(history[i].timestamp.slice(5, 10), x, H - 8);
             }
         }
+    }
+}
+
+// ─── Accordion ─────────────────────────────────────────────────
+function toggleAccordion(btn) {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!expanded));
+    const body = btn.nextElementSibling;
+    if (expanded) {
+        body.classList.add('collapsed');
+    } else {
+        body.classList.remove('collapsed');
     }
 }
 
