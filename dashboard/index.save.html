@@ -175,11 +175,113 @@
         #timeline-canvas { width: 100%; height: 200px; }
         .footer { text-align: center; margin-top: 40px; color: var(--gray-500); font-size: 0.85rem; }
         .footer a { color: var(--green-400); text-decoration: none; }
+
+        /* ─── Layout principal : sidebar + contenu ────────── */
+        .dashboard-layout {
+            display: flex;
+            gap: 20px;
+            max-width: 1680px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+        .sidebar-panel {
+            width: 260px;
+            min-width: 260px;
+            background: rgba(31,41,55,0.92);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius);
+            padding: 20px 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 24px;
+        }
+        .sidebar-panel h3 {
+            font-size: 1rem;
+            color: var(--green-400);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sidebar-panel .param-group {
+            margin-bottom: 18px;
+        }
+        .sidebar-panel .param-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gray-300);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .sidebar-panel .param-sublabel {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--gray-500);
+            margin-top: 2px;
+        }
+        .sidebar-panel input[type="range"] {
+            width: 100%;
+            accent-color: var(--green-500);
+            cursor: pointer;
+        }
+        .sidebar-panel input[type="number"] {
+            width: 100%;
+            background: var(--gray-800);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-100);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .sidebar-panel input[type="number"]:focus {
+            outline: none;
+            border-color: var(--green-500);
+            box-shadow: 0 0 0 2px rgba(34,197,94,0.25);
+        }
+        .sidebar-panel .param-value {
+            display: inline-block;
+            background: var(--green-800);
+            color: var(--green-200);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            float: right;
+        }
+        .sidebar-panel .reset-btn {
+            width: 100%;
+            margin-top: 8px;
+            background: var(--gray-700);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-300);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .sidebar-panel .reset-btn:hover {
+            background: var(--green-700);
+            border-color: var(--green-500);
+            color: white;
+        }
+        .dashboard-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .dashboard-main .grid {
+            max-width: 100%;
+        }
+
         @media (max-width: 768px) {
             .header h1 { font-size: 1.5rem; }
             .grid { grid-template-columns: 1fr; }
             .score-circle { width: 150px; height: 150px; }
             .score-circle .number { font-size: 2.5rem; }
+            .dashboard-layout { flex-direction: column; }
+            .sidebar-panel { width: 100%; min-width: 0; position: static; }
         }
     </style>
 </head>
@@ -200,7 +302,60 @@
         <button onclick="clearHistory()">🗑️ Réinitialiser</button>
     </div>
 
-    <div class="grid" id="main-grid">
+    <div class="dashboard-layout">
+        <!-- Sidebar : Paramétrage Énergie -->
+        <div class="sidebar-panel" id="energy-params-panel">
+            <h3>⚙️ Paramètres énergie</h3>
+
+            <div class="param-group">
+                <label class="param-label">
+                    🌐 Réseau (kWh/GB)
+                    <span class="param-value" id="val-network">0.06</span>
+                </label>
+                <input type="range" id="param-network" min="0.01" max="0.30" step="0.01" value="0.06">
+                <span class="param-sublabel">The Shift Project : 0.06 — Haut : 0.20</span>
+            </div>
+
+            <div class="param-group">
+                <label class="param-label">
+                    🖥️ Puissance serveur (W)
+                    <span class="param-value" id="val-server">25</span>
+                </label>
+                <input type="range" id="param-server" min="5" max="200" step="1" value="25">
+                <span class="param-sublabel">VM légère : 10W — Bare metal : 150W</span>
+            </div>
+
+            <div class="param-group">
+                <label class="param-label">
+                    📊 Requêtes / jour
+                    <span class="param-value" id="val-reqday">10000</span>
+                </label>
+                <input type="number" id="param-reqday" min="1" max="100000000" value="10000">
+                <span class="param-sublabel">Projection journalière</span>
+            </div>
+
+            <div class="param-group">
+                <label class="param-label">
+                    📅 Jours / an
+                    <span class="param-value" id="val-days">365</span>
+                </label>
+                <input type="number" id="param-days" min="1" max="365" value="365">
+                <span class="param-sublabel">Projection annuelle</span>
+            </div>
+
+            <div class="param-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-600);">
+                <label class="param-label" style="font-size:0.85rem;">📋 Projection énergie</label>
+                <div style="font-size:0.8rem;color:var(--gray-300);line-height:1.7;" id="projection-summary">
+                    —
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetEnergyParams()">🔄 Réinitialiser par défaut</button>
+        </div>
+
+        <!-- Main dashboard -->
+        <div class="dashboard-main">
+            <div class="grid" id="main-grid">
         <!-- Score Hero -->
         <div class="card score-hero" id="score-hero">
             <div class="empty-state" id="empty-state">
@@ -276,7 +431,9 @@
             <h2>📈 Historique des scores</h2>
             <canvas id="timeline-canvas"></canvas>
         </div>
-    </div>
+        </div>
+    </div><!-- /dashboard-main -->
+    </div><!-- /dashboard-layout -->
 
     <div class="footer">
         <p>🌿 API Green Score — <a href="https://github.com/API-Green-Score/APIGreenScore" target="_blank">Framework</a> |
@@ -549,6 +706,9 @@ function renderReport(report) {
         <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée</div></div>
     `;
 
+    // Update sidebar projection
+    updateProjectionSummary();
+
     // Measurements table
     const tableCard = document.getElementById('table-card');
     tableCard.style.display = 'block';
@@ -679,15 +839,29 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-// ─── Energy helpers ────────────────────────────────────────────
-const ENERGY_NETWORK_KWH_PER_GB = 0.06; // The Shift Project
-const ENERGY_SERVER_POWER_W = 25;        // Estimation serveur moyen
+// ─── Energy helpers (paramétrable) ─────────────────────────────
+function getEnergyNetworkKwhPerGb() {
+    const el = document.getElementById('param-network');
+    return el ? parseFloat(el.value) : 0.06;
+}
+function getEnergyServerPowerW() {
+    const el = document.getElementById('param-server');
+    return el ? parseFloat(el.value) : 25;
+}
+function getReqPerDay() {
+    const el = document.getElementById('param-reqday');
+    return el ? parseInt(el.value) || 10000 : 10000;
+}
+function getDaysPerYear() {
+    const el = document.getElementById('param-days');
+    return el ? parseInt(el.value) || 365 : 365;
+}
 
 function energyNetworkWh(bytes) {
-    return (bytes / (1024 * 1024 * 1024)) * ENERGY_NETWORK_KWH_PER_GB * 1000;
+    return (bytes / (1024 * 1024 * 1024)) * getEnergyNetworkKwhPerGb() * 1000;
 }
 function energyServerWh(timeSeconds) {
-    return timeSeconds * (ENERGY_SERVER_POWER_W / 3600);
+    return timeSeconds * (getEnergyServerPowerW() / 3600);
 }
 function energyTotalWh(bytes, timeSeconds) {
     return energyNetworkWh(bytes) + energyServerWh(timeSeconds);
@@ -696,7 +870,79 @@ function formatEnergy(wh) {
     if (!isFinite(wh) || wh === 0) return '—';
     if (wh < 0.001) return (wh * 1000).toFixed(3) + ' mWh';
     if (wh < 1) return wh.toFixed(4) + ' Wh';
-    return wh.toFixed(2) + ' Wh';
+    if (wh < 1000) return wh.toFixed(2) + ' Wh';
+    return (wh / 1000).toFixed(2) + ' kWh';
+}
+
+function updateProjectionSummary() {
+    const el = document.getElementById('projection-summary');
+    if (!el || !currentReport) { if (el) el.textContent = '—'; return; }
+    const m = currentReport.measurements;
+    const bFull = m.baseline?.full_payload?.size_download || 0;
+    const bTime = m.baseline?.full_payload?.time_total || 0;
+
+    const reqDay = getReqPerDay();
+    const daysYear = getDaysPerYear();
+    const reqYear = reqDay * daysYear;
+
+    // Énergie par requête naive
+    const eNaive = energyTotalWh(bFull, bTime);
+    // Énergie par requête optimisée (moyenne des optimisées)
+    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    let optCount = 0, optSum = 0;
+    for (const k of optKeys) {
+        const ep = m.optimized?.[k];
+        if (ep) { optSum += energyTotalWh(ep.size_download || 0, ep.time_total || 0); optCount++; }
+    }
+    const eOpt = optCount > 0 ? optSum / optCount : 0;
+
+    const naiveYear = eNaive * reqYear;
+    const optYear = eOpt * reqYear;
+    const savedYear = naiveYear - optYear;
+
+    el.innerHTML = `
+        <div>⚡ Naive/req : <strong>${formatEnergy(eNaive)}</strong></div>
+        <div>🌿 Opt./req : <strong style="color:var(--green-400)">${formatEnergy(eOpt)}</strong></div>
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-700);">
+            📆 Naive/an : <strong>${formatEnergy(naiveYear)}</strong>
+        </div>
+        <div>📆 Opt./an : <strong style="color:var(--green-400)">${formatEnergy(optYear)}</strong></div>
+        <div>💡 Économie/an : <strong style="color:var(--green-400)">${formatEnergy(savedYear)}</strong></div>
+    `;
+}
+
+// ─── Sidebar event listeners ──────────────────────────────────
+function initEnergyPanel() {
+    const networkSlider = document.getElementById('param-network');
+    const serverSlider = document.getElementById('param-server');
+    const reqInput = document.getElementById('param-reqday');
+    const daysInput = document.getElementById('param-days');
+
+    function onParamChange() {
+        document.getElementById('val-network').textContent = networkSlider.value;
+        document.getElementById('val-server').textContent = serverSlider.value;
+        document.getElementById('val-reqday').textContent = reqInput.value;
+        document.getElementById('val-days').textContent = daysInput.value;
+        // Re-render energy parts
+        if (currentReport) renderReport(currentReport);
+    }
+
+    networkSlider.addEventListener('input', onParamChange);
+    serverSlider.addEventListener('input', onParamChange);
+    reqInput.addEventListener('input', onParamChange);
+    daysInput.addEventListener('input', onParamChange);
+}
+
+function resetEnergyParams() {
+    document.getElementById('param-network').value = 0.06;
+    document.getElementById('param-server').value = 25;
+    document.getElementById('param-reqday').value = 10000;
+    document.getElementById('param-days').value = 365;
+    document.getElementById('val-network').textContent = '0.06';
+    document.getElementById('val-server').textContent = '25';
+    document.getElementById('val-reqday').textContent = '10000';
+    document.getElementById('val-days').textContent = '365';
+    if (currentReport) renderReport(currentReport);
 }
 
 async function exportPng() {
@@ -792,6 +1038,7 @@ function loadSampleData() {
 
 // ─── Auto-load latest if served from same origin ───────────────
 window.addEventListener('DOMContentLoaded', () => {
+    initEnergyPanel();
     if (EMBEDDED_REPORT) {
         addToHistory(EMBEDDED_REPORT);
         renderReport(EMBEDDED_REPORT);
