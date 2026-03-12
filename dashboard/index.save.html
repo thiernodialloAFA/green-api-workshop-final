@@ -394,6 +394,36 @@
                 </div>
             </div>
 
+            <div class="param-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-600);">
+                <label class="param-label">
+                    🌍 Pays d'hébergement
+                    <span class="param-value" id="val-country-co2">53</span> gCO2/kWh
+                </label>
+                <select id="param-country" style="width:100%;background:var(--gray-800);border:1px solid var(--gray-600);color:var(--gray-100);border-radius:6px;padding:6px 10px;font-size:0.85rem;font-weight:600;">
+                    <option value="53" selected>🇫🇷 France — 53 gCO2/kWh</option>
+                    <option value="385">🇩🇪 Allemagne — 385 gCO2/kWh</option>
+                    <option value="233">🇬🇧 Royaume-Uni — 233 gCO2/kWh</option>
+                    <option value="200">🇪🇸 Espagne — 200 gCO2/kWh</option>
+                    <option value="371">🇮🇹 Italie — 371 gCO2/kWh</option>
+                    <option value="397">🇺🇸 États-Unis — 397 gCO2/kWh</option>
+                    <option value="21">🇨🇦 Canada — 21 gCO2/kWh</option>
+                    <option value="45">🇸🇪 Suède — 45 gCO2/kWh</option>
+                    <option value="29">🇳🇴 Norvège — 29 gCO2/kWh</option>
+                    <option value="340">🇳🇱 Pays-Bas — 340 gCO2/kWh</option>
+                    <option value="155">🇧🇪 Belgique — 155 gCO2/kWh</option>
+                    <option value="440">🇵🇱 Pologne — 440 gCO2/kWh</option>
+                    <option value="709">🇨🇳 Chine — 709 gCO2/kWh</option>
+                    <option value="708">🇮🇳 Inde — 708 gCO2/kWh</option>
+                    <option value="478">🇯🇵 Japon — 478 gCO2/kWh</option>
+                    <option value="424">🇰🇷 Corée du Sud — 424 gCO2/kWh</option>
+                    <option value="656">🇦🇺 Australie — 656 gCO2/kWh</option>
+                    <option value="24">🇧🇷 Brésil — 24 gCO2/kWh</option>
+                    <option value="410">🇿🇦 Afrique du Sud — 410 gCO2/kWh</option>
+                    <option value="100">🇨🇭 Suisse — 100 gCO2/kWh</option>
+                </select>
+                <span class="param-sublabel">Source : Electricity Maps / AIE 2024</span>
+            </div>
+
             <button class="reset-btn" onclick="resetEnergyParams()">🔄 Réinitialiser par défaut</button>
         </div>
 
@@ -458,6 +488,15 @@
             </div>
         </div>
 
+        <!-- CO2 Emissions Equivalent -->
+        <div class="card" id="co2-card" style="display:none;">
+            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">🌍 Équivalent Émissions CO₂ <span class="chevron">▼</span></button>
+            <div class="accordion-body" id="co2-accordion">
+                <div class="metric-grid" id="co2-grid"></div>
+                <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);" id="co2-source-label">Source : Electricity Maps / AIE 2024 — Pays : France (53 gCO₂/kWh)</p>
+            </div>
+        </div>
+
         <!-- Measurements Table -->
         <div class="card" id="table-card" style="display:none;grid-column:1/-1;">
             <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📐 Détail des mesures <span class="chevron">▼</span></button>
@@ -473,6 +512,7 @@
                                 <th>⚡ Énergie réseau (Wh)</th>
                                 <th>⚡ Énergie serveur (Wh)</th>
                                 <th>⚡ Énergie totale (Wh)</th>
+                                <th>🌍 CO₂ (g)</th>
                                 <th>Règle</th>
                             </tr>
                         </thead>
@@ -741,28 +781,65 @@ function renderReport(report) {
     const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
 
     const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
-    let optEnergyNet = 0, optEnergySrv = 0;
+    let optEnergyNet = 0, optEnergySrv = 0, optEndpointCount = 0;
     for (const k of optKeys) {
         const ep = m.optimized?.[k];
         if (ep) {
             optEnergyNet += energyNetworkWh(ep.size_download || 0);
             optEnergySrv += energyServerWh(ep.time_total || 0);
+            optEndpointCount++;
         }
+    }
+    // Moyenne par requête (comparable à la baseline qui est 1 seule requête)
+    if (optEndpointCount > 0) {
+        optEnergyNet = optEnergyNet / optEndpointCount;
+        optEnergySrv = optEnergySrv / optEndpointCount;
     }
     const optEnergyTotal = optEnergyNet + optEnergySrv;
     const energyGainPct = baselineEnergyTotal > 0 ? Math.round((1 - optEnergyTotal / baselineEnergyTotal) * 100) : 0;
     const energySaved = baselineEnergyTotal - optEnergyTotal;
 
     eg.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive)</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé)</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive)</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive) / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé) / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive) / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé) / req</div></div>
         <div class="metric-item"><div class="metric-value" style="color:${energyGainPct>0?'var(--green-400)':'var(--red-400)'}">⚡ ${energyGainPct}%</div><div class="metric-label">Gain énergie global</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée / req</div></div>
     `;
+
+    // ─── CO2 Emissions card ────────────────────────────────────────
+    const co2Card = document.getElementById('co2-card');
+    co2Card.style.display = 'block';
+    const co2g = document.getElementById('co2-grid');
+    const co2Source = document.getElementById('co2-source-label');
+
+    const baselineCO2 = energyWhToCO2g(baselineEnergyTotal);
+    const optCO2 = energyWhToCO2g(optEnergyTotal);
+    const co2Saved = baselineCO2 - optCO2;
+    const co2GainPct = baselineCO2 > 0 ? Math.round((1 - optCO2 / baselineCO2) * 100) : 0;
+
+    // Projections annuelles CO2
+    const reqDay = getReqPerDay();
+    const daysYear = getDaysPerYear();
+    const reqYear = reqDay * daysYear;
+    const baselineCO2Year = baselineCO2 * reqYear;
+    const optCO2Year = optCO2 * reqYear;
+    const co2SavedYear = baselineCO2Year - optCO2Year;
+
+    co2g.innerHTML = `
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO2 API naive / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO2 API optimisee / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO2 naive / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO2 optimisee / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Reduction CO2</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO2 economise / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO2 economise / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km' : (co2SavedYear/120).toFixed(1) + ' km'} 🚗</div><div class="metric-label">Equiv. voiture</div></div>
+    `;
+    co2Source.textContent = 'Source : Electricity Maps / AIE 2024 — ' + getSelectedCountryLabel();
 
     // Update sidebar projection
     updateProjectionSummary();
@@ -792,6 +869,7 @@ function renderReport(report) {
         const eNet = energyNetworkWh(r.size_download || 0);
         const eSrv = energyServerWh(r.time_total || 0);
         const eTotal = eNet + eSrv;
+        const eCO2 = energyWhToCO2g(eTotal);
         tbody.innerHTML += `<tr>
             <td>${r.ep}</td>
             <td style="color:${codeColor};font-weight:700;">${code}</td>
@@ -800,6 +878,7 @@ function renderReport(report) {
             <td>${formatEnergy(eNet)}</td>
             <td>${formatEnergy(eSrv)}</td>
             <td style="font-weight:700;color:var(--green-400)">${formatEnergy(eTotal)}</td>
+            <td style="font-weight:700;color:var(--blue-400)">${formatCO2(eCO2)}</td>
             <td><span style="color:var(--green-400)">${r.rule}</span></td>
         </tr>`;
     }
@@ -944,6 +1023,27 @@ function formatEnergy(wh) {
     return (wh / 1000).toFixed(2) + ' kWh';
 }
 
+// ─── CO2 helpers ───────────────────────────────────────────────
+function getCO2FactorGPerKwh() {
+    const el = document.getElementById('param-country');
+    return el ? parseFloat(el.value) : 53;
+}
+function getSelectedCountryLabel() {
+    const el = document.getElementById('param-country');
+    if (!el) return 'France (53 gCO₂/kWh)';
+    return el.options[el.selectedIndex].text;
+}
+function energyWhToCO2g(wh) {
+    return (wh / 1000) * getCO2FactorGPerKwh();
+}
+function formatCO2(grams) {
+    if (!isFinite(grams) || grams === 0) return '—';
+    if (grams < 0.001) return (grams * 1000).toFixed(3) + ' mg';
+    if (grams < 1) return (grams * 1000).toFixed(1) + ' mg';
+    if (grams < 1000) return grams.toFixed(2) + ' g';
+    return (grams / 1000).toFixed(2) + ' kg';
+}
+
 function updateProjectionSummary() {
     const el = document.getElementById('projection-summary');
     if (!el || !currentReport) { if (el) el.textContent = '—'; return; }
@@ -987,12 +1087,14 @@ function initEnergyPanel() {
     const serverSlider = document.getElementById('param-server');
     const reqInput = document.getElementById('param-reqday');
     const daysInput = document.getElementById('param-days');
+    const countrySelect = document.getElementById('param-country');
 
     function onParamChange() {
         document.getElementById('val-network').textContent = networkSlider.value;
         document.getElementById('val-server').textContent = serverSlider.value;
         document.getElementById('val-reqday').textContent = reqInput.value;
         document.getElementById('val-days').textContent = daysInput.value;
+        document.getElementById('val-country-co2').textContent = countrySelect.value;
         // Re-render energy parts
         if (currentReport) renderReport(currentReport);
     }
@@ -1001,6 +1103,7 @@ function initEnergyPanel() {
     serverSlider.addEventListener('input', onParamChange);
     reqInput.addEventListener('input', onParamChange);
     daysInput.addEventListener('input', onParamChange);
+    countrySelect.addEventListener('change', onParamChange);
 }
 
 function resetEnergyParams() {
@@ -1008,10 +1111,12 @@ function resetEnergyParams() {
     document.getElementById('param-server').value = 25;
     document.getElementById('param-reqday').value = 10000;
     document.getElementById('param-days').value = 365;
+    document.getElementById('param-country').value = '53';
     document.getElementById('val-network').textContent = '0.06';
     document.getElementById('val-server').textContent = '25';
     document.getElementById('val-reqday').textContent = '10000';
     document.getElementById('val-days').textContent = '365';
+    document.getElementById('val-country-co2').textContent = '53';
     if (currentReport) renderReport(currentReport);
 }
 
