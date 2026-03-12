@@ -541,7 +541,7 @@
 
 <script>
 const STORAGE_KEY = 'green-api-score-history';
-const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:30:01Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3807, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3807, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.742899, "speed_download": 79366499}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.006697, "speed_download": 18963}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.005329, "speed_download": 23831}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3807, "time_total": 0.093939, "speed_download": 40526}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.076533, "speed_download": 12726}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.083043, "speed_download": 29587}, "etag_first_call": {"http_code": 200, "size_download": 189, "time_total": 0.007926, "speed_download": 23845}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.006641, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.075281, "speed_download": 2537}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.006136, "speed_download": 4889}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 2.55057, "speed_download": 60294838}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 2.777661, "speed_download": 73039143}}}};
+const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:49:49Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3807, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3807, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.185348, "speed_download": 116698043}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.008194, "speed_download": 15499}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.007065, "speed_download": 17975}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3807, "time_total": 0.097662, "speed_download": 38981}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.076824, "speed_download": 12678}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.065274, "speed_download": 37641}, "etag_first_call": {"http_code": 200, "size_download": 189, "time_total": 0.007362, "speed_download": 25672}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.005919, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.064201, "speed_download": 2975}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.007382, "speed_download": 4063}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 2.010994, "speed_download": 76472731}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 2.558674, "speed_download": 79290280}}}};
 
 // ─── State ─────────────────────────────────────────────────────
 let currentReport = null;
@@ -700,9 +700,9 @@ function renderReport(report) {
     const rtBars = document.getElementById('response-times-bars');
     rtBars.innerHTML = '';
 
-    const bFullTime = m.baseline?.full_payload?.time_total || 0;
+    const bFullTime = m.optimized?.full_payload?.time_total || m.baseline?.full_payload?.time_total || 0;
     const timeComparisons = [
-        { label: 'GET /books (full)', baseline: bFullTime, optimized: m.optimized?.full_payload?.time_total },
+        { label: 'GET /books (full naïf)', baseline: bFullTime, optimized: bFullTime },
         { label: 'GET /books (paginated)', baseline: bFullTime, optimized: m.optimized?.pagination?.time_total },
         { label: 'GET /books/select (fields)', baseline: bFullTime, optimized: m.optimized?.fields_filter?.time_total },
         { label: 'GET /books (gzip)', baseline: bFullTime, optimized: m.optimized?.gzip_compression?.time_total },
@@ -791,9 +791,11 @@ function renderReport(report) {
     }
     const optEnergyTotal = optEnergyNet + optEnergySrv;
 
-    // Baseline : 1 appel full payload naïf
-    const baselineEnergyNet = energyNetworkWh(bFull);
-    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
+    // Baseline : 1 appel full payload naïf (même dataset = optimized full)
+    const baselineFullSize = m.optimized?.full_payload?.size_download || m.baseline?.full_payload?.size_download || 0;
+    const baselineFullTime = m.optimized?.full_payload?.time_total || m.baseline?.full_payload?.time_total || 0;
+    const baselineEnergyNet = energyNetworkWh(baselineFullSize);
+    const baselineEnergySrv = energyServerWh(baselineFullTime);
     const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
 
     const energyGainPct = baselineEnergyTotal > 0 ? Math.round((1 - optEnergyTotal / baselineEnergyTotal) * 100) : 0;
@@ -821,23 +823,21 @@ function renderReport(report) {
     const co2Saved = baselineCO2 - optCO2;
     const co2GainPct = baselineCO2 > 0 ? Math.round((1 - optCO2 / baselineCO2) * 100) : 0;
 
-    // Projections annuelles CO2
+    // Projection annuelle CO2
     const reqDay = getReqPerDay();
     const daysYear = getDaysPerYear();
     const reqYear = reqDay * daysYear;
-    const baselineCO2Year = baselineCO2 * reqYear;
-    const optCO2Year = optCO2 * reqYear;
-    const co2SavedYear = baselineCO2Year - optCO2Year;
+    const co2SavedYear = co2Saved * reqYear;
 
     co2g.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO₂ API naive (global)</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO₂ API optimisée (global)</div></div>
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO₂ naive / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO₂ optimisée / an</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO₂ naive / appel</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO₂ optimisée / appel</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO₂ économisé / appel</div></div>
         <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Réduction CO₂</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO₂ économisé (global)</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO₂ économisé / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km 🚗' : (co2SavedYear/120).toFixed(1) + ' km 🚗'}</div><div class="metric-label">Équiv. voiture</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO₂ économisé / an<br><small style="color:var(--gray-400)">(${reqDay.toLocaleString('fr-FR')} req/j × ${daysYear}j)</small></div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatDistance(co2ToKm(co2SavedYear, CO2_CAR_G_PER_KM))} 🚗</div><div class="metric-label">Équiv. voiture<br><small style="color:var(--gray-400)">${CO2_CAR_G_PER_KM} gCO₂/km</small></div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatDistance(co2ToKm(co2SavedYear, CO2_PLANE_G_PER_KM))} ✈️</div><div class="metric-label">Équiv. avion<br><small style="color:var(--gray-400)">${CO2_PLANE_G_PER_KM} gCO₂/km</small></div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatDistance(co2ToKm(co2SavedYear, CO2_TRAIN_G_PER_KM))} 🚄</div><div class="metric-label">Équiv. train<br><small style="color:var(--gray-400)">${CO2_TRAIN_G_PER_KM} gCO₂/km</small></div></div>
     `;
     co2Source.textContent = 'Source : Electricity Maps / AIE 2024 — ' + getSelectedCountryLabel();
 
@@ -851,7 +851,7 @@ function renderReport(report) {
     tbody.innerHTML = '';
 
     const rows = [
-        { ep: 'GET /books (baseline)', ...m.baseline?.full_payload, rule: '—' },
+        { ep: 'GET /books (full naïf)', ...(m.optimized?.full_payload || m.baseline?.full_payload), rule: '—' },
         { ep: 'GET /books/1 (baseline)', ...m.baseline?.single_resource, rule: '—' },
         { ep: 'GET /books?page&size', ...m.optimized?.pagination, rule: 'DE11' },
         { ep: 'GET /books/select?fields', ...m.optimized?.fields_filter, rule: 'DE08' },
@@ -1044,12 +1044,29 @@ function formatCO2(grams) {
     return (grams / 1000).toFixed(2) + ' kg';
 }
 
+// ─── Équivalences transport CO₂ ───────────────────────────────
+// Sources ADEME 2024 — gCO₂/km/passager
+const CO2_CAR_G_PER_KM    = 120;   // Voiture thermique moyenne EU
+const CO2_PLANE_G_PER_KM  = 255;   // Avion court-courrier
+const CO2_TRAIN_G_PER_KM  = 14;    // Train moyenne EU (6 pour TGV France)
+
+function co2ToKm(grams, gPerKm) {
+    if (!isFinite(grams) || grams <= 0 || gPerKm <= 0) return 0;
+    return grams / gPerKm;
+}
+function formatDistance(km) {
+    if (!isFinite(km) || km <= 0) return '—';
+    if (km < 1) return (km * 1000).toFixed(0) + ' m';
+    if (km < 100) return km.toFixed(1) + ' km';
+    return Math.round(km).toLocaleString('fr-FR') + ' km';
+}
+
 function updateProjectionSummary() {
     const el = document.getElementById('projection-summary');
     if (!el || !currentReport) { if (el) el.textContent = '—'; return; }
     const m = currentReport.measurements;
-    const bFull = m.baseline?.full_payload?.size_download || 0;
-    const bTime = m.baseline?.full_payload?.time_total || 0;
+    const bFull = m.optimized?.full_payload?.size_download || m.baseline?.full_payload?.size_download || 0;
+    const bTime = m.optimized?.full_payload?.time_total || m.baseline?.full_payload?.time_total || 0;
 
     const reqDay = getReqPerDay();
     const daysYear = getDaysPerYear();
