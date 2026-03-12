@@ -661,14 +661,15 @@ function renderReport(report) {
     compBars.innerHTML = '';
 
     const fullNaiveBytes = m.baseline?.full_payload?.size_download || 0;
+    const fullOptBytes = m.optimized?.full_payload?.size_download || fullNaiveBytes;
     const comparisons = [
         { label: 'Pagination (DE11)', baseline: fullNaiveBytes, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
         { label: 'Fields filter (DE08)', baseline: fullNaiveBytes, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
         { label: 'Gzip compression (DE01)', baseline: fullNaiveBytes, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
         { label: 'ETag 304 (DE02)', baseline: fullNaiveBytes, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
-        { label: 'Delta changes (DE06)', baseline: fullNaiveBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06' },
+        { label: 'Delta changes (DE06)', baseline: fullOptBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06', note: 'vs full optimisé' },
         { label: 'Range 206', baseline: fullNaiveBytes, optimized: m.optimized?.range_206?.size_download, rule: '206' },
-        { label: 'CBOR format (AR02)', baseline: fullNaiveBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02' },
+        { label: 'CBOR format (AR02)', baseline: fullOptBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02', note: 'vs full optimisé JSON' },
     ];
 
     const maxBytes = Math.max(...comparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 1);
@@ -678,10 +679,11 @@ function renderReport(report) {
         const o = c.optimized || 0;
         const gain = b > 0 ? Math.round((1 - o / b) * 100) : 0;
         const gainCls = gain > 0 ? 'positive' : 'negative';
+        const noteHtml = c.note ? ` <span style="font-size:0.7rem;color:var(--gray-400);">(${c.note})</span>` : '';
 
         compBars.innerHTML += `
             <div class="comparison-row">
-                <div class="comparison-label">${c.label} <span class="gain-badge ${gainCls}">${gain > 0 ? '-' : '+'}${Math.abs(gain)}%</span></div>
+                <div class="comparison-label">${c.label}${noteHtml} <span class="gain-badge ${gainCls}">${gain > 0 ? '-' : '+'}${Math.abs(gain)}%</span></div>
                 <div class="comparison-values"><span>Avant: ${formatBytes(b)}</span><span>Après: ${formatBytes(o)}</span></div>
                 <div class="bar-container">
                     <div class="bar baseline" style="width:${(b/maxBytes*100).toFixed(1)}%">${formatBytes(b)}</div>
@@ -780,9 +782,9 @@ function renderReport(report) {
     const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
     const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
 
-    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
     let optEnergyNet = 0, optEnergySrv = 0, optEndpointCount = 0;
-    for (const k of optKeys) {
+    for (const k of optKeysEnergy) {
         const ep = m.optimized?.[k];
         if (ep) {
             optEnergyNet += energyNetworkWh(ep.size_download || 0);
@@ -1057,10 +1059,10 @@ function updateProjectionSummary() {
 
     // Énergie par requête naive
     const eNaive = energyTotalWh(bFull, bTime);
-    // Énergie par requête optimisée (moyenne des optimisées)
-    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    // Énergie par requête optimisée (moyenne des optimisées, hors delta qui est incrémental)
+    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
     let optCount = 0, optSum = 0;
-    for (const k of optKeys) {
+    for (const k of optKeysProj) {
         const ep = m.optimized?.[k];
         if (ep) { optSum += energyTotalWh(ep.size_download || 0, ep.time_total || 0); optCount++; }
     }

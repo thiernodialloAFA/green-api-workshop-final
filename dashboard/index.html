@@ -541,7 +541,7 @@
 
 <script>
 const STORAGE_KEY = 'green-api-score-history';
-const EMBEDDED_REPORT = {"timestamp": "2026-03-12T07:06:22Z", "green_score": {"total": 84, "max": 100, "grade": "A", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 6, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 5}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3805, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3805, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 202877977, "note": "delta endpoint active"}, "range_206": {"http_code": 206, "bytes": 34, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "note": "CBOR active"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 0.780271, "speed_download": 177281730}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.006297, "speed_download": 20168}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.022558, "speed_download": 5629}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3805, "time_total": 0.056136, "speed_download": 67781}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.074636, "speed_download": 13050}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.047009, "speed_download": 52266}, "etag_first_call": {"http_code": 200, "size_download": 187, "time_total": 0.031654, "speed_download": 5907}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.01647, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 202877977, "time_total": 2.431357, "speed_download": 83442282}, "range_206": {"http_code": 206, "size_download": 34, "time_total": 0.009326, "speed_download": 3645}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 1.899327, "speed_download": 80968787}, "full_payload": {"http_code": 200, "size_download": 202877977, "time_total": 2.39735, "speed_download": 84625931}}}};
+const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:12:14Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3805, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3805, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.08741, "speed_download": 127208498}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.005858, "speed_download": 21679}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.006759, "speed_download": 18789}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3805, "time_total": 0.09203, "speed_download": 41345}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.06362, "speed_download": 15309}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.124283, "speed_download": 19769}, "etag_first_call": {"http_code": 200, "size_download": 187, "time_total": 0.009194, "speed_download": 20339}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.008753, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.062566, "speed_download": 3052}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.007124, "speed_download": 4211}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 3.489244, "speed_download": 44074362}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 3.401193, "speed_download": 59649064}}}};
 
 // ─── State ─────────────────────────────────────────────────────
 let currentReport = null;
@@ -661,14 +661,15 @@ function renderReport(report) {
     compBars.innerHTML = '';
 
     const fullNaiveBytes = m.baseline?.full_payload?.size_download || 0;
+    const fullOptBytes = m.optimized?.full_payload?.size_download || fullNaiveBytes;
     const comparisons = [
         { label: 'Pagination (DE11)', baseline: fullNaiveBytes, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
         { label: 'Fields filter (DE08)', baseline: fullNaiveBytes, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
         { label: 'Gzip compression (DE01)', baseline: fullNaiveBytes, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
         { label: 'ETag 304 (DE02)', baseline: fullNaiveBytes, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
-        { label: 'Delta changes (DE06)', baseline: fullNaiveBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06' },
+        { label: 'Delta changes (DE06)', baseline: fullOptBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06', note: 'vs full optimisé' },
         { label: 'Range 206', baseline: fullNaiveBytes, optimized: m.optimized?.range_206?.size_download, rule: '206' },
-        { label: 'CBOR format (AR02)', baseline: fullNaiveBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02' },
+        { label: 'CBOR format (AR02)', baseline: fullOptBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02', note: 'vs full optimisé JSON' },
     ];
 
     const maxBytes = Math.max(...comparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 1);
@@ -678,10 +679,11 @@ function renderReport(report) {
         const o = c.optimized || 0;
         const gain = b > 0 ? Math.round((1 - o / b) * 100) : 0;
         const gainCls = gain > 0 ? 'positive' : 'negative';
+        const noteHtml = c.note ? ` <span style="font-size:0.7rem;color:var(--gray-400);">(${c.note})</span>` : '';
 
         compBars.innerHTML += `
             <div class="comparison-row">
-                <div class="comparison-label">${c.label} <span class="gain-badge ${gainCls}">${gain > 0 ? '-' : '+'}${Math.abs(gain)}%</span></div>
+                <div class="comparison-label">${c.label}${noteHtml} <span class="gain-badge ${gainCls}">${gain > 0 ? '-' : '+'}${Math.abs(gain)}%</span></div>
                 <div class="comparison-values"><span>Avant: ${formatBytes(b)}</span><span>Après: ${formatBytes(o)}</span></div>
                 <div class="bar-container">
                     <div class="bar baseline" style="width:${(b/maxBytes*100).toFixed(1)}%">${formatBytes(b)}</div>
@@ -780,9 +782,9 @@ function renderReport(report) {
     const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
     const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
 
-    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
     let optEnergyNet = 0, optEnergySrv = 0, optEndpointCount = 0;
-    for (const k of optKeys) {
+    for (const k of optKeysEnergy) {
         const ep = m.optimized?.[k];
         if (ep) {
             optEnergyNet += energyNetworkWh(ep.size_download || 0);
@@ -830,14 +832,14 @@ function renderReport(report) {
     const co2SavedYear = baselineCO2Year - optCO2Year;
 
     co2g.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO₂ API naive / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO₂ API optimisée / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO₂ naive / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO₂ optimisée / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Réduction CO₂</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO₂ économisé / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO₂ économisé / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km 🚗' : (co2SavedYear/120).toFixed(1) + ' km 🚗'}</div><div class="metric-label">Équiv. voiture</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO2 API naive / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO2 API optimisee / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO2 naive / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO2 optimisee / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Reduction CO2</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO2 economise / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO2 economise / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km' : (co2SavedYear/120).toFixed(1) + ' km'} 🚗</div><div class="metric-label">Equiv. voiture</div></div>
     `;
     co2Source.textContent = 'Source : Electricity Maps / AIE 2024 — ' + getSelectedCountryLabel();
 
@@ -1057,10 +1059,10 @@ function updateProjectionSummary() {
 
     // Énergie par requête naive
     const eNaive = energyTotalWh(bFull, bTime);
-    // Énergie par requête optimisée (moyenne des optimisées)
-    const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+    // Énergie par requête optimisée (moyenne des optimisées, hors delta qui est incrémental)
+    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
     let optCount = 0, optSum = 0;
-    for (const k of optKeys) {
+    for (const k of optKeysProj) {
         const ep = m.optimized?.[k];
         if (ep) { optSum += energyTotalWh(ep.size_download || 0, ep.time_total || 0); optCount++; }
     }

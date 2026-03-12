@@ -172,10 +172,18 @@ if [ "$OPT_AVAILABLE" = true ]; then
 
   # --- Delta (DE06/US04) ---
   echo -e "  ${CYAN}[5/8]${NC} Delta changes DE06 — GET /books/changes?since=..."
-  SINCE=$(date -u -d '-5 minutes' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v -5M +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "2026-01-01T00:00:00Z")
-  O_DELTA=$(measure "opt_delta" "$OPTIMIZED/books/changes?since=$SINCE")
+  # Capture timestamp AVANT update pour avoir un vrai delta incrémental
+  SINCE_NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)
+  sleep 1
+  # Faire un petit update pour générer 1 delta entry
+  curl -s -X PUT "$OPTIMIZED/books/1" \
+    -H "Content-Type: application/json" \
+    -d '{"title":"Title 1","author":"Author 1","published_date":1990,"pages":100,"summary":"Updated summary for delta test"}' \
+    -o /dev/null 2>/dev/null || true
+  # Mesurer le delta (ne devrait retourner que le livre modifié)
+  O_DELTA=$(measure "opt_delta" "$OPTIMIZED/books/changes?since=$SINCE_NOW")
   O_DELTA_SIZE=$(echo "$O_DELTA" | python3 -c "import sys,json;print(json.load(sys.stdin)['size_download'])" 2>/dev/null || echo "0")
-  echo -e "         size=${GREEN}${O_DELTA_SIZE}${NC} bytes"
+  echo -e "         size=${GREEN}${O_DELTA_SIZE}${NC} bytes (delta since update)"
 
   # --- Range 206 ---
   echo -e "  ${CYAN}[6/8]${NC} Range 206 — GET /books/1/summary (bytes=0-199)..."
@@ -297,14 +305,20 @@ else:
 
 # DE06 - Delta (10 pts)
 od = opt_delta['size_download']
+of_full = opt_full['size_download']  # Comparer au full du MÊME dataset
 if od >= 0 and opt_delta['http_code'] == 200:
-    if bf > 0 and od < bf * 0.1:
+    if of_full > 0 and od < of_full * 0.1:
         scores['DE06_delta'] = 10
-    elif od > 0:
+        details['DE06_delta'] = {'delta_bytes': od, 'full_bytes': of_full, 'reduction_pct': round((1 - od/of_full)*100, 1) if of_full > 0 else 0, 'note': 'delta endpoint active — excellent reduction'}
+    elif od == 0:
+        scores['DE06_delta'] = 10  # empty delta = perfect
+        details['DE06_delta'] = {'delta_bytes': 0, 'note': 'no changes — empty delta'}
+    elif of_full > 0 and od < of_full:
         scores['DE06_delta'] = 6
+        details['DE06_delta'] = {'delta_bytes': od, 'full_bytes': of_full, 'note': 'delta endpoint active'}
     else:
-        scores['DE06_delta'] = 8  # empty delta = good
-    details['DE06_delta'] = {'delta_bytes': od, 'note': 'delta endpoint active'}
+        scores['DE06_delta'] = 3
+        details['DE06_delta'] = {'delta_bytes': od, 'full_bytes': of_full, 'note': 'delta active but returns too much data'}
 else:
     scores['DE06_delta'] = 0
     details['DE06_delta'] = {'note': 'not measured'}
@@ -340,12 +354,14 @@ else:
 
 # AR02 - Binary format CBOR (10 pts)
 oc = opt_cbor['size_download']
-if oc > 0 and bf > 0 and oc < bf:
-    scores['AR02_format_cbor'] = 10
-    details['AR02_format_cbor'] = {'cbor_bytes': oc, 'json_bytes': bf, 'note': 'CBOR active'}
+of_full = opt_full['size_download']  # Comparer au JSON full du MÊME dataset
+if oc > 0 and of_full > 0 and oc < of_full:
+    ratio = 1 - (oc / of_full)
+    scores['AR02_format_cbor'] = min(10, round(ratio * 10 + 5, 1))
+    details['AR02_format_cbor'] = {'cbor_bytes': oc, 'json_bytes': of_full, 'reduction_pct': round(ratio*100,1), 'note': 'CBOR active — compared to optimized full JSON'}
 elif oc > 0:
     scores['AR02_format_cbor'] = 5
-    details['AR02_format_cbor'] = {'cbor_bytes': oc, 'note': 'CBOR active'}
+    details['AR02_format_cbor'] = {'cbor_bytes': oc, 'json_bytes': of_full, 'note': 'CBOR active but not smaller than JSON'}
 else:
     scores['AR02_format_cbor'] = 0
     details['AR02_format_cbor'] = {'note': 'not measured'}
