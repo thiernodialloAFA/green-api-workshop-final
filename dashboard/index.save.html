@@ -778,11 +778,8 @@ function renderReport(report) {
     energyCard.style.display = 'block';
     const eg = document.getElementById('energy-grid');
 
-    const baselineEnergyNet = energyNetworkWh(bFull);
-    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
-    const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
-
-    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
+    // Énergie globale : somme de tous les endpoints optimisés vs baseline (full naive × N)
+    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
     let optEnergyNet = 0, optEnergySrv = 0, optEndpointCount = 0;
     for (const k of optKeysEnergy) {
         const ep = m.optimized?.[k];
@@ -792,24 +789,25 @@ function renderReport(report) {
             optEndpointCount++;
         }
     }
-    // Moyenne par requête (comparable à la baseline qui est 1 seule requête)
-    if (optEndpointCount > 0) {
-        optEnergyNet = optEnergyNet / optEndpointCount;
-        optEnergySrv = optEnergySrv / optEndpointCount;
-    }
     const optEnergyTotal = optEnergyNet + optEnergySrv;
+
+    // Baseline : 1 appel full payload naïf
+    const baselineEnergyNet = energyNetworkWh(bFull);
+    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
+    const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
+
     const energyGainPct = baselineEnergyTotal > 0 ? Math.round((1 - optEnergyTotal / baselineEnergyTotal) * 100) : 0;
     const energySaved = baselineEnergyTotal - optEnergyTotal;
 
     eg.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive) / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé) / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive) / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé) / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé)</div></div>
         <div class="metric-item"><div class="metric-value" style="color:${energyGainPct>0?'var(--green-400)':'var(--red-400)'}">⚡ ${energyGainPct}%</div><div class="metric-label">Gain énergie global</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée</div></div>
     `;
 
     // ─── CO2 Emissions card ────────────────────────────────────────
@@ -832,14 +830,14 @@ function renderReport(report) {
     const co2SavedYear = baselineCO2Year - optCO2Year;
 
     co2g.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO2 API naive / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO2 API optimisee / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO2 naive / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO2 optimisee / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Reduction CO2</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO2 economise / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO2 economise / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km' : (co2SavedYear/120).toFixed(1) + ' km'} 🚗</div><div class="metric-label">Equiv. voiture</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO₂ API naive (global)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO₂ API optimisée (global)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO₂ naive / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO₂ optimisée / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Réduction CO₂</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO₂ économisé (global)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO₂ économisé / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km 🚗' : (co2SavedYear/120).toFixed(1) + ' km 🚗'}</div><div class="metric-label">Équiv. voiture</div></div>
     `;
     co2Source.textContent = 'Source : Electricity Maps / AIE 2024 — ' + getSelectedCountryLabel();
 
@@ -1057,24 +1055,25 @@ function updateProjectionSummary() {
     const daysYear = getDaysPerYear();
     const reqYear = reqDay * daysYear;
 
-    // Énergie par requête naive
-    const eNaive = energyTotalWh(bFull, bTime);
-    // Énergie par requête optimisée (moyenne des optimisées, hors delta qui est incrémental)
-    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
+    // Énergie globale (somme de tous les endpoints optimisés vs baseline × N)
+    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
     let optCount = 0, optSum = 0;
     for (const k of optKeysProj) {
         const ep = m.optimized?.[k];
         if (ep) { optSum += energyTotalWh(ep.size_download || 0, ep.time_total || 0); optCount++; }
     }
-    const eOpt = optCount > 0 ? optSum / optCount : 0;
+    const eNaiveGlobal = energyTotalWh(bFull, bTime);
+    const eOptGlobal = optSum;
+    const eSavedGlobal = eNaiveGlobal - eOptGlobal;
 
-    const naiveYear = eNaive * reqYear;
-    const optYear = eOpt * reqYear;
+    const naiveYear = eNaiveGlobal * reqYear;
+    const optYear = eOptGlobal * reqYear;
     const savedYear = naiveYear - optYear;
 
     el.innerHTML = `
-        <div>⚡ Naive/req : <strong>${formatEnergy(eNaive)}</strong></div>
-        <div>🌿 Opt./req : <strong style="color:var(--green-400)">${formatEnergy(eOpt)}</strong></div>
+        <div>⚡ Naive : <strong>${formatEnergy(eNaiveGlobal)}</strong></div>
+        <div>🌿 Optimisé : <strong style="color:var(--green-400)">${formatEnergy(eOptGlobal)}</strong></div>
+        <div>💡 Économie : <strong style="color:var(--green-400)">${formatEnergy(eSavedGlobal)}</strong></div>
         <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-700);">
             📆 Naive/an : <strong>${formatEnergy(naiveYear)}</strong>
         </div>

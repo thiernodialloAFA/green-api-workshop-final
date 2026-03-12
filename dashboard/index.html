@@ -541,7 +541,7 @@
 
 <script>
 const STORAGE_KEY = 'green-api-score-history';
-const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:12:14Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3805, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3805, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.08741, "speed_download": 127208498}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.005858, "speed_download": 21679}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.006759, "speed_download": 18789}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3805, "time_total": 0.09203, "speed_download": 41345}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.06362, "speed_download": 15309}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.124283, "speed_download": 19769}, "etag_first_call": {"http_code": 200, "size_download": 187, "time_total": 0.009194, "speed_download": 20339}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.008753, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.062566, "speed_download": 3052}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.007124, "speed_download": 4211}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 3.489244, "speed_download": 44074362}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 3.401193, "speed_download": 59649064}}}};
+const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:30:01Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3807, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3807, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.742899, "speed_download": 79366499}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.006697, "speed_download": 18963}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.005329, "speed_download": 23831}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3807, "time_total": 0.093939, "speed_download": 40526}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.076533, "speed_download": 12726}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.083043, "speed_download": 29587}, "etag_first_call": {"http_code": 200, "size_download": 189, "time_total": 0.007926, "speed_download": 23845}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.006641, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.075281, "speed_download": 2537}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.006136, "speed_download": 4889}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 2.55057, "speed_download": 60294838}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 2.777661, "speed_download": 73039143}}}};
 
 // ─── State ─────────────────────────────────────────────────────
 let currentReport = null;
@@ -778,11 +778,8 @@ function renderReport(report) {
     energyCard.style.display = 'block';
     const eg = document.getElementById('energy-grid');
 
-    const baselineEnergyNet = energyNetworkWh(bFull);
-    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
-    const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
-
-    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
+    // Énergie globale : somme de tous les endpoints optimisés vs baseline (full naive × N)
+    const optKeysEnergy = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
     let optEnergyNet = 0, optEnergySrv = 0, optEndpointCount = 0;
     for (const k of optKeysEnergy) {
         const ep = m.optimized?.[k];
@@ -792,24 +789,25 @@ function renderReport(report) {
             optEndpointCount++;
         }
     }
-    // Moyenne par requête (comparable à la baseline qui est 1 seule requête)
-    if (optEndpointCount > 0) {
-        optEnergyNet = optEnergyNet / optEndpointCount;
-        optEnergySrv = optEnergySrv / optEndpointCount;
-    }
     const optEnergyTotal = optEnergyNet + optEnergySrv;
+
+    // Baseline : 1 appel full payload naïf
+    const baselineEnergyNet = energyNetworkWh(bFull);
+    const baselineEnergySrv = energyServerWh(m.baseline?.full_payload?.time_total || 0);
+    const baselineEnergyTotal = baselineEnergyNet + baselineEnergySrv;
+
     const energyGainPct = baselineEnergyTotal > 0 ? Math.round((1 - optEnergyTotal / baselineEnergyTotal) * 100) : 0;
     const energySaved = baselineEnergyTotal - optEnergyTotal;
 
     eg.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive) / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé) / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive) / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé) / req</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyTotal)}</div><div class="metric-label">Énergie API naive</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyTotal)}</div><div class="metric-label">Énergie API optimisée</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergyNet)}</div><div class="metric-label">Réseau (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergyNet)}</div><div class="metric-label">Réseau (optimisé)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(baselineEnergySrv)}</div><div class="metric-label">Serveur (naive)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(optEnergySrv)}</div><div class="metric-label">Serveur (optimisé)</div></div>
         <div class="metric-item"><div class="metric-value" style="color:${energyGainPct>0?'var(--green-400)':'var(--red-400)'}">⚡ ${energyGainPct}%</div><div class="metric-label">Gain énergie global</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée / req</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatEnergy(energySaved)}</div><div class="metric-label">Énergie économisée</div></div>
     `;
 
     // ─── CO2 Emissions card ────────────────────────────────────────
@@ -832,14 +830,14 @@ function renderReport(report) {
     const co2SavedYear = baselineCO2Year - optCO2Year;
 
     co2g.innerHTML = `
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO2 API naive / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO2 API optimisee / req</div></div>
-        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO2 naive / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO2 optimisee / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Reduction CO2</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO2 economise / req</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO2 economise / an</div></div>
-        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km' : (co2SavedYear/120).toFixed(1) + ' km'} 🚗</div><div class="metric-label">Equiv. voiture</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2)}</div><div class="metric-label">CO₂ API naive (global)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2)}</div><div class="metric-label">CO₂ API optimisée (global)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatCO2(baselineCO2Year)}</div><div class="metric-label">CO₂ naive / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(optCO2Year)}</div><div class="metric-label">CO₂ optimisée / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:${co2GainPct>0?'var(--green-400)':'var(--red-400)'}">🌍 ${co2GainPct}%</div><div class="metric-label">Réduction CO₂</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2Saved)}</div><div class="metric-label">CO₂ économisé (global)</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${formatCO2(co2SavedYear)}</div><div class="metric-label">CO₂ économisé / an</div></div>
+        <div class="metric-item"><div class="metric-value" style="color:var(--green-400)">${co2SavedYear > 1000 ? (co2SavedYear/1000).toFixed(1) + ' km 🚗' : (co2SavedYear/120).toFixed(1) + ' km 🚗'}</div><div class="metric-label">Équiv. voiture</div></div>
     `;
     co2Source.textContent = 'Source : Electricity Maps / AIE 2024 — ' + getSelectedCountryLabel();
 
@@ -1057,24 +1055,25 @@ function updateProjectionSummary() {
     const daysYear = getDaysPerYear();
     const reqYear = reqDay * daysYear;
 
-    // Énergie par requête naive
-    const eNaive = energyTotalWh(bFull, bTime);
-    // Énergie par requête optimisée (moyenne des optimisées, hors delta qui est incrémental)
-    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','range_206'];
+    // Énergie globale (somme de tous les endpoints optimisés vs baseline × N)
+    const optKeysProj = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
     let optCount = 0, optSum = 0;
     for (const k of optKeysProj) {
         const ep = m.optimized?.[k];
         if (ep) { optSum += energyTotalWh(ep.size_download || 0, ep.time_total || 0); optCount++; }
     }
-    const eOpt = optCount > 0 ? optSum / optCount : 0;
+    const eNaiveGlobal = energyTotalWh(bFull, bTime);
+    const eOptGlobal = optSum;
+    const eSavedGlobal = eNaiveGlobal - eOptGlobal;
 
-    const naiveYear = eNaive * reqYear;
-    const optYear = eOpt * reqYear;
+    const naiveYear = eNaiveGlobal * reqYear;
+    const optYear = eOptGlobal * reqYear;
     const savedYear = naiveYear - optYear;
 
     el.innerHTML = `
-        <div>⚡ Naive/req : <strong>${formatEnergy(eNaive)}</strong></div>
-        <div>🌿 Opt./req : <strong style="color:var(--green-400)">${formatEnergy(eOpt)}</strong></div>
+        <div>⚡ Naive : <strong>${formatEnergy(eNaiveGlobal)}</strong></div>
+        <div>🌿 Optimisé : <strong style="color:var(--green-400)">${formatEnergy(eOptGlobal)}</strong></div>
+        <div>💡 Économie : <strong style="color:var(--green-400)">${formatEnergy(eSavedGlobal)}</strong></div>
         <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-700);">
             📆 Naive/an : <strong>${formatEnergy(naiveYear)}</strong>
         </div>
