@@ -231,3 +231,48 @@ jobs:
         run: npm install -g @stoplight/spectral-cli
       - name: Run Spectral with Green API rules
         run: spectral lint openapi.json --ruleset .spectral.yml --format stylish || true
+
+  auto-discover:
+    name: "🔍 Auto-Discover Analysis"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli
+      - name: Download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+      - name: Start optimized API
+        run: |
+          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > optimized.log 2>&1 &
+          echo $! > optimized.pid
+          for i in $(seq 1 60); do
+            curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "API ready" && break
+            sleep 2
+          done
+      - name: Run Auto-Discover Analyzer
+        run: |
+          python3 scripts/green-api-auto-discover.py \
+            --target http://localhost:8081 \
+            --repeat 3
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-discover-report
+          path: reports/
+      - name: Stop services
+        if: always()
+        run: kill $(cat optimized.pid) 2>/dev/null || true
+

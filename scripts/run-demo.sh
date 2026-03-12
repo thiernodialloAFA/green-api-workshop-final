@@ -31,7 +31,7 @@ echo -e "${NC}"
 ###############################################################################
 # STEP 1 — Build
 ###############################################################################
-echo -e "${YELLOW}━━━ STEP 1/5 : Build des projets ━━━${NC}"
+echo -e "${YELLOW}━━━ STEP 1/7 : Build des projets ━━━${NC}"
 echo -e "  Building baseline..."
 cd "$ROOT/green-api-baseline" && mvn -q package -DskipTests 2>/dev/null
 echo -e "  ${GREEN}✓ Baseline built${NC}"
@@ -43,7 +43,7 @@ echo ""
 ###############################################################################
 # STEP 2 — Start services
 ###############################################################################
-echo -e "${YELLOW}━━━ STEP 2/5 : Démarrage des services ━━━${NC}"
+echo -e "${YELLOW}━━━ STEP 2/7 : Démarrage des services ━━━${NC}"
 cd "$ROOT/green-api-baseline"
 java -jar target/green-api-baseline-0.0.1-SNAPSHOT.jar \
   --app.dataset.size="$DATASET_SIZE" \
@@ -72,56 +72,158 @@ done
 echo ""
 
 ###############################################################################
-# STEP 3 — Mesures manuelles rapides (live demo)
+# STEP 3 — Découverte automatique des endpoints
 ###############################################################################
-echo -e "${YELLOW}━━━ STEP 3/5 : Mesures rapides avant/après ━━━${NC}"
+echo -e "${YELLOW}━━━ STEP 3/7 : Découverte automatique des endpoints ━━━${NC}"
 echo ""
 
-echo -e "  ${RED}🔴 AVANT — Baseline: GET /books (500k livres, pas de pagination)${NC}"
-curl -s -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -o /dev/null http://localhost:8080/books
+SPEC_FILE="/tmp/green-api-spec.json"
+SWAGGER_FOUND=""
+
+# Try optimized first (has springdoc), then baseline
+SWAGGER_PATHS="/v3/api-docs /v3/api-docs.yaml /v2/api-docs /openapi.json /swagger.json"
+for base in "http://localhost:8081" "http://localhost:8080"; do
+  for path in $SWAGGER_PATHS; do
+    url="${base}${path}"
+    echo -ne "  Trying ${url}..."
+    status=$(curl -s -o "$SPEC_FILE" -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+    if [ "$status" = "200" ] && [ -s "$SPEC_FILE" ]; then
+      echo -e " ${GREEN}✓ Found!${NC}"
+      SWAGGER_FOUND="$url"
+      break 2
+    fi
+    echo -e " ${RED}✗${NC}"
+  done
+done
+
+# Extract GET endpoints from spec
+DISCOVERED_PATHS=""
+if [ -n "$SWAGGER_FOUND" ]; then
+  echo -e "  ${GREEN}✓ Swagger discovered: ${SWAGGER_FOUND}${NC}"
+  cp "$SPEC_FILE" "$ROOT/reports/discovered-openapi.json" 2>/dev/null || true
+
+  DISCOVERED_PATHS=$(python3 -c "
+import json, re, sys
+
+spec = json.load(open('$SPEC_FILE', 'r'))
+base_path = spec.get('basePath', '') if spec.get('swagger') == '2.0' else ''
+
+for path, ops in (spec.get('paths') or {}).items():
+    full = base_path + path if base_path else path
+    for method in ('get',):
+        if method in ops:
+            url_path = re.sub(r'\{[^}]+\}', '1', full)
+            summary = (ops[method].get('summary') or ops[method].get('operationId') or '')[:60]
+            print(f'{method.upper()}|{full}|{url_path}|{summary}')
+" 2>/dev/null || echo "")
+
+  EP_COUNT=$(echo "$DISCOVERED_PATHS" | grep -c '|' || echo "0")
+  echo -e "  ${GREEN}✓ Discovered ${EP_COUNT} GET endpoint(s):${NC}"
+  echo "$DISCOVERED_PATHS" | while IFS='|' read -r method path url_path summary; do
+    [ -z "$method" ] && continue
+    echo -e "     ${CYAN}${method}${NC} ${path}  ${YELLOW}(${summary})${NC}"
+  done
+else
+  echo -e "  ${RED}⚠  No swagger discovered. Using hardcoded endpoints.${NC}"
+fi
 echo ""
 
-echo -e "  ${GREEN}🟢 APRÈS — Optimized: GET /books?page=0&size=20 (paginé)${NC}"
-curl -s -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -o /dev/null "http://localhost:8081/books?page=0&size=20"
+###############################################################################
+# STEP 4 — Mesures rapides avant/après (dynamiques)
+###############################################################################
+echo -e "${YELLOW}━━━ STEP 4/7 : Mesures rapides avant/après ━━━${NC}"
 echo ""
 
-echo -e "  ${GREEN}🟢 APRÈS — Optimized: /books/select?fields=id,title,author (filtré)${NC}"
-curl -s -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20"
+if [ -n "$DISCOVERED_PATHS" ]; then
+  # ── BASELINE: measure all discovered endpoints ──
+  echo -e "  ${RED}🔴 AVANT — Baseline (API naïve, port 8080)${NC}"
+  echo "$DISCOVERED_PATHS" | while IFS='|' read -r method path url_path summary; do
+    [ -z "$method" ] && continue
+    url="http://localhost:8080${url_path}"
+    echo -ne "     ${method} ${path} "
+    curl -s -w '→ %{http_code}  %{size_download} bytes  %{time_total}s\n' \
+      -o /dev/null "$url" 2>/dev/null || echo "→ error"
+  done
+  echo ""
+
+  # ── OPTIMIZED: measure all discovered endpoints ──
+  echo -e "  ${GREEN}🟢 APRÈS — Optimized (API green, port 8081)${NC}"
+  echo "$DISCOVERED_PATHS" | while IFS='|' read -r method path url_path summary; do
+    [ -z "$method" ] && continue
+    url="http://localhost:8081${url_path}"
+    echo -ne "     ${method} ${path} "
+    curl -s -w '→ %{http_code}  %{size_download} bytes  %{time_total}s\n' \
+      -o /dev/null "$url" 2>/dev/null || echo "→ error"
+  done
+  echo ""
+else
+  # Fallback hardcoded
+  echo -e "  ${RED}🔴 AVANT — Baseline: GET /books (pas de pagination)${NC}"
+  curl -s -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
+    -o /dev/null http://localhost:8080/books
+  echo ""
+
+  echo -e "  ${GREEN}🟢 APRÈS — Optimized: GET /books?page=0&size=20${NC}"
+  curl -s -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
+    -o /dev/null "http://localhost:8081/books?page=0&size=20"
+  echo ""
+fi
+
+###############################################################################
+# STEP 5 — Tests Green API spécifiques (gzip, ETag, Range)
+###############################################################################
+echo -e "${YELLOW}━━━ STEP 5/7 : Tests Green API spécifiques ━━━${NC}"
 echo ""
 
-echo -e "  ${GREEN}🟢 APRÈS — Optimized: gzip compressé${NC}"
+# Find a collection endpoint and a single-resource endpoint from discovery
+COLLECTION_PATH=""
+SINGLE_PATH=""
+if [ -n "$DISCOVERED_PATHS" ]; then
+  COLLECTION_PATH=$(echo "$DISCOVERED_PATHS" | grep -v '{' | head -1 | cut -d'|' -f3)
+  SINGLE_PATH=$(echo "$DISCOVERED_PATHS" | grep '{' | head -1 | cut -d'|' -f3)
+fi
+COLLECTION_PATH=${COLLECTION_PATH:-"/books"}
+SINGLE_PATH=${SINGLE_PATH:-"/books/1"}
+
+echo -e "  ${GREEN}🟢 Gzip compression — GET http://localhost:8081${COLLECTION_PATH}${NC}"
 curl -s -H 'Accept-Encoding: gzip' \
   -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50"
+  -o /dev/null "http://localhost:8081${COLLECTION_PATH}"
 echo ""
 
-echo -e "  ${GREEN}🟢 APRÈS — ETag → 304 (zéro transfert)${NC}"
-ETAG=$(curl -sI http://localhost:8081/books/1 2>/dev/null | grep -i '^etag:' | awk -F': ' '{print $2}' | tr -d '\r\n')
+echo -e "  ${GREEN}🟢 ETag → 304 — GET http://localhost:8081${SINGLE_PATH}${NC}"
+ETAG=$(curl -sI "http://localhost:8081${SINGLE_PATH}" 2>/dev/null | grep -i '^etag:' | awk -F': ' '{print $2}' | tr -d '\r\n')
+if [ -n "$ETAG" ]; then
+  curl -s -o /dev/null \
+    -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s (ETag: %{http_code})\n' \
+    -H "If-None-Match: $ETAG" "http://localhost:8081${SINGLE_PATH}"
+else
+  echo -e "     ${YELLOW}⚠ No ETag header returned — skipping 304 test${NC}"
+fi
+echo ""
+
+RANGE_URL="http://localhost:8081${SINGLE_PATH}/summary"
+echo -e "  ${GREEN}🟢 Range 206 — GET ${RANGE_URL}${NC}"
 curl -s -o /dev/null \
   -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -H "If-None-Match: $ETAG" http://localhost:8081/books/1
-echo ""
-
-echo -e "  ${GREEN}🟢 APRÈS — Range 206 (partial content)${NC}"
-curl -s -o /dev/null \
-  -w '     → http_code=%{http_code}  size=%{size_download} bytes  time=%{time_total}s\n' \
-  -H 'Range: bytes=0-199' http://localhost:8081/books/1/summary
+  -H 'Range: bytes=0-199' "$RANGE_URL" 2>/dev/null || echo "     → endpoint not available"
 echo ""
 
 ###############################################################################
-# STEP 4 — Analyse automatisée Green Score
+# STEP 6 — Analyse automatisée Green Score (with discovery)
 ###############################################################################
-echo -e "${YELLOW}━━━ STEP 4/5 : Analyse Green Score automatisée ━━━${NC}"
-bash "$ROOT/scripts/green-score-analyzer.sh"
+echo -e "${YELLOW}━━━ STEP 6/7 : Analyse Green Score automatisée (with discovery) ━━━${NC}"
+if [ -f "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" ]; then
+  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh"
+else
+  bash "$ROOT/scripts/green-score-analyzer.sh"
+fi
 echo ""
 
 ###############################################################################
-# STEP 5 — Ouvrir le dashboard
+# STEP 7 — Ouvrir le dashboard
 ###############################################################################
-echo -e "${YELLOW}━━━ STEP 5/5 : Dashboard ━━━${NC}"
+echo -e "${YELLOW}━━━ STEP 7/7 : Dashboard ━━━${NC}"
 DASHBOARD="$ROOT/dashboard/index.html"
 echo -e "  📊 Dashboard disponible : ${GREEN}${DASHBOARD}${NC}"
 

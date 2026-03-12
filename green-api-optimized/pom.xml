@@ -82,6 +82,11 @@
       <artifactId>caffeine</artifactId>
       <version>3.1.8</version>
     </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.13</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -91,4 +96,47 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- ── Green Score Auto-Discover Profile ──────────────────────
+         Usage: mvn verify -Pgreen-score
+         Requires: Python 3.8+, the API running on port 8081
+         Optional: npm i -g @stoplight/spectral-cli (for linting)
+    ───────────────────────────────────────────────────────────── -->
+    <profile>
+      <id>green-score</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>green-api-auto-discover</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>python3</executable>
+                  <workingDirectory>${project.basedir}/..</workingDirectory>
+                  <arguments>
+                    <argument>scripts/green-api-auto-discover.py</argument>
+                    <argument>--target</argument>
+                    <argument>http://localhost:${server.port}</argument>
+                    <argument>--repeat</argument>
+                    <argument>3</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <server.port>8081</server.port>
+      </properties>
+    </profile>
+  </profiles>
 </project>

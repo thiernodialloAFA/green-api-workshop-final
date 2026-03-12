@@ -449,40 +449,40 @@
 
         <!-- Rules Breakdown -->
         <div class="card" id="rules-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📋 Détail par règle API Green Score <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="rules-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">📋 Détail par règle API Green Score <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="rules-accordion">
                 <div id="rules-list"></div>
             </div>
         </div>
 
         <!-- Before/After Comparison -->
         <div class="card" id="comparison-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📊 Avant / Après — Payload (bytes) <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="comparison-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">📊 Avant / Après — Payload (bytes) <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="comparison-accordion">
                 <div id="comparison-bars"></div>
             </div>
         </div>
 
         <!-- Response Times -->
         <div class="card" id="response-times-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">⏱️ Temps de réponse (secondes) <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="response-times-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">⏱️ Temps de réponse (secondes) <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="response-times-accordion">
                 <div id="response-times-bars"></div>
             </div>
         </div>
 
         <!-- Key Metrics -->
         <div class="card" id="metrics-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">🔑 Métriques clés <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="metrics-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">🔑 Métriques clés <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="metrics-accordion">
                 <div class="metric-grid" id="metrics-grid"></div>
             </div>
         </div>
 
         <!-- Energy Summary -->
         <div class="card" id="energy-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">⚡ Résumé énergie <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="energy-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">⚡ Résumé énergie <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="energy-accordion">
                 <div class="metric-grid" id="energy-grid"></div>
                 <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);">Modèle : réseau 0.06 kWh/GB (The Shift Project) + serveur 25W estimé.</p>
             </div>
@@ -490,17 +490,18 @@
 
         <!-- CO2 Emissions Equivalent -->
         <div class="card" id="co2-card" style="display:none;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">🌍 Équivalent Émissions CO₂ <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="co2-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">🌍 Équivalent Émissions CO₂ <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="co2-accordion">
                 <div class="metric-grid" id="co2-grid"></div>
                 <p style="margin-top:10px;font-size:0.75rem;color:var(--gray-400);" id="co2-source-label">Source : Electricity Maps / AIE 2024 — Pays : France (53 gCO₂/kWh)</p>
             </div>
         </div>
 
+
         <!-- Measurements Table -->
         <div class="card" id="table-card" style="display:none;grid-column:1/-1;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📐 Détail des mesures <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="table-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">📐 Détail des mesures <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="table-accordion">
                 <div style="overflow-x:auto;">
                     <table id="measurements-table">
                         <thead>
@@ -524,8 +525,8 @@
 
         <!-- History Timeline -->
         <div class="card" id="history-card" style="display:none;grid-column:1/-1;">
-            <button class="accordion-toggle" aria-expanded="true" onclick="toggleAccordion(this)">📈 Historique des scores <span class="chevron">▼</span></button>
-            <div class="accordion-body" id="history-accordion">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">📈 Historique des scores <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="history-accordion">
                 <canvas id="timeline-canvas"></canvas>
             </div>
         </div>
@@ -541,7 +542,7 @@
 
 <script>
 const STORAGE_KEY = 'green-api-score-history';
-const EMBEDDED_REPORT = {"timestamp": "2026-03-12T08:49:49Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3807, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3807, "filtered_bytes": 974, "reduction_pct": 74.4}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 191, "full_bytes": 202877979, "reduction_pct": 100.0, "note": "delta endpoint active \u2014 excellent reduction"}, "range_206": {"http_code": 206, "bytes": 30, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786205, "json_bytes": 202877979, "reduction_pct": 24.2, "note": "CBOR active \u2014 compared to optimized full JSON"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 1.185348, "speed_download": 116698043}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.008194, "speed_download": 15499}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.007065, "speed_download": 17975}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3807, "time_total": 0.097662, "speed_download": 38981}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.076824, "speed_download": 12678}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.065274, "speed_download": 37641}, "etag_first_call": {"http_code": 200, "size_download": 189, "time_total": 0.007362, "speed_download": 25672}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.005919, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 191, "time_total": 0.064201, "speed_download": 2975}, "range_206": {"http_code": 206, "size_download": 30, "time_total": 0.007382, "speed_download": 4063}, "cbor_format": {"http_code": 200, "size_download": 153786205, "time_total": 2.010994, "speed_download": 76472731}, "full_payload": {"http_code": 200, "size_download": 202877979, "time_total": 2.558674, "speed_download": 79290280}}}};
+const EMBEDDED_REPORT = {"timestamp": "2026-03-12T13:17:32Z", "green_score": {"total": 90.4, "max": 100, "grade": "A+", "breakdown": {"DE11_pagination": 15, "DE08_fields": 15, "DE01_compression": 8, "DE02_DE03_cache": 15, "DE06_delta": 10, "range_206": 10, "LO01_observability": 5, "US07_rate_limit": 5, "AR02_format_cbor": 7.4}, "details": {"DE11_pagination": {"baseline_bytes": 138327793, "optimized_bytes": 3794, "reduction_pct": 100.0}, "DE08_fields": {"paginated_bytes": 3794, "filtered_bytes": 974, "reduction_pct": 74.3}, "DE01_compression": {"note": "gzip active"}, "DE02_DE03_cache": {"http_code": 304, "body_bytes": 0, "note": "perfect 304"}, "DE06_delta": {"delta_bytes": 178, "full_bytes": 202857977, "reduction_pct": 100.0, "note": "delta endpoint active"}, "range_206": {"http_code": 206, "bytes": 17, "note": "partial content supported"}, "LO01_observability": {"note": "PayloadLoggingFilter detected"}, "US07_rate_limit": {"note": "RateLimitFilter detected"}, "AR02_format_cbor": {"cbor_bytes": 153786191, "json_bytes": 202857977, "reduction_pct": 24.2, "note": "CBOR active"}}}, "measurements": {"baseline": {"full_payload": {"http_code": 200, "size_download": 138327793, "time_total": 0.856795, "speed_download": 161447946}, "single_resource": {"http_code": 200, "size_download": 127, "time_total": 0.006208, "speed_download": 20457}, "single_repeat": {"http_code": 200, "size_download": 127, "time_total": 0.008797, "speed_download": 14436}}, "optimized": {"pagination": {"http_code": 200, "size_download": 3794, "time_total": 0.056648, "speed_download": 66975}, "fields_filter": {"http_code": 200, "size_download": 974, "time_total": 0.069706, "speed_download": 13972}, "gzip_compression": {"http_code": 200, "size_download": 2457, "time_total": 0.051351, "speed_download": 47847}, "etag_first_call": {"http_code": 200, "size_download": 176, "time_total": 0.006154, "speed_download": 28599}, "etag_304": {"http_code": 304, "size_download": 0, "time_total": 0.006266, "speed_download": 0}, "delta_changes": {"http_code": 200, "size_download": 178, "time_total": 0.054232, "speed_download": 3282}, "range_206": {"http_code": 206, "size_download": 17, "time_total": 0.007556, "speed_download": 2249}, "cbor_format": {"http_code": 200, "size_download": 153786191, "time_total": 2.088326, "speed_download": 73640892}, "full_payload": {"http_code": 200, "size_download": 202857977, "time_total": 3.561719, "speed_download": 56955076}}}, "auto_discovery": {"base_url": "http://localhost:8081", "swagger_url": "http://localhost:8081/v3/api-docs", "endpoints_discovered": 0, "endpoints_measured": 0, "all_measurements": {}, "discovered_endpoints": []}, "spectral": {"issues_count": 0, "errors": 0, "warnings": 0, "infos": 0, "issues": []}};
 
 // ─── State ─────────────────────────────────────────────────────
 let currentReport = null;
@@ -662,15 +663,28 @@ function renderReport(report) {
 
     const fullNaiveBytes = m.baseline?.full_payload?.size_download || 0;
     const fullOptBytes = m.optimized?.full_payload?.size_download || fullNaiveBytes;
-    const comparisons = [
-        { label: 'Pagination (DE11)', baseline: fullNaiveBytes, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
-        { label: 'Fields filter (DE08)', baseline: fullNaiveBytes, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
-        { label: 'Gzip compression (DE01)', baseline: fullNaiveBytes, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
-        { label: 'ETag 304 (DE02)', baseline: fullNaiveBytes, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
-        { label: 'Delta changes (DE06)', baseline: fullOptBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06', note: 'vs full optimisé' },
-        { label: 'Range 206', baseline: fullNaiveBytes, optimized: m.optimized?.range_206?.size_download, rule: '206' },
-        { label: 'CBOR format (AR02)', baseline: fullOptBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02', note: 'vs full optimisé JSON' },
-    ];
+
+    // ── Build payload comparisons dynamically or fallback ──
+    let comparisons = [];
+    const discEps = currentReport.auto_discovery?.discovered_endpoints;
+    if (discEps && discEps.length > 0) {
+        const baseRef = fullOptBytes || fullNaiveBytes;
+        for (const ep of discEps) {
+            if ((ep.size_download || 0) === 0) continue;
+            const label = `${ep.method} ${ep.path}`;
+            comparisons.push({ label, baseline: baseRef, optimized: ep.size_download || 0 });
+        }
+    } else {
+        comparisons = [
+            { label: 'Pagination (DE11)', baseline: fullNaiveBytes, optimized: m.optimized?.pagination?.size_download, rule: 'DE11' },
+            { label: 'Fields filter (DE08)', baseline: fullNaiveBytes, optimized: m.optimized?.fields_filter?.size_download, rule: 'DE08' },
+            { label: 'Gzip compression (DE01)', baseline: fullNaiveBytes, optimized: m.optimized?.gzip_compression?.size_download, rule: 'DE01' },
+            { label: 'ETag 304 (DE02)', baseline: fullNaiveBytes, optimized: m.optimized?.etag_304?.size_download, rule: 'DE02' },
+            { label: 'Delta changes (DE06)', baseline: fullOptBytes, optimized: m.optimized?.delta_changes?.size_download, rule: 'DE06', note: 'vs full optimise' },
+            { label: 'Range 206', baseline: fullNaiveBytes, optimized: m.optimized?.range_206?.size_download, rule: '206' },
+            { label: 'CBOR format (AR02)', baseline: fullOptBytes, optimized: m.optimized?.cbor_format?.size_download, rule: 'AR02', note: 'vs full optimise JSON' },
+        ];
+    }
 
     const maxBytes = Math.max(...comparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 1);
 
@@ -701,16 +715,27 @@ function renderReport(report) {
     rtBars.innerHTML = '';
 
     const bFullTime = m.optimized?.full_payload?.time_total || m.baseline?.full_payload?.time_total || 0;
-    const timeComparisons = [
-        { label: 'GET /books (full naïf)', baseline: bFullTime, optimized: bFullTime },
-        { label: 'GET /books (paginated)', baseline: bFullTime, optimized: m.optimized?.pagination?.time_total },
-        { label: 'GET /books/select (fields)', baseline: bFullTime, optimized: m.optimized?.fields_filter?.time_total },
-        { label: 'GET /books (gzip)', baseline: bFullTime, optimized: m.optimized?.gzip_compression?.time_total },
-        { label: 'GET /books/1 (1er appel)', baseline: bFullTime, optimized: m.optimized?.etag_first_call?.time_total },
-        { label: 'GET /books/1 (ETag 304)', baseline: bFullTime, optimized: m.optimized?.etag_304?.time_total },
-        { label: 'GET /books/changes (delta)', baseline: bFullTime, optimized: m.optimized?.delta_changes?.time_total },
-        { label: 'GET /books/1/summary (range)', baseline: bFullTime, optimized: m.optimized?.range_206?.time_total },
-    ];
+
+    // ── Build time comparisons dynamically or fallback ──
+    let timeComparisons = [];
+    if (discEps && discEps.length > 0) {
+        for (const ep of discEps) {
+            if ((ep.time_total || 0) === 0) continue;
+            const label = `${ep.method} ${ep.path}`;
+            timeComparisons.push({ label, baseline: bFullTime, optimized: ep.time_total || 0 });
+        }
+    } else {
+        timeComparisons = [
+            { label: 'GET /books (full naif)', baseline: bFullTime, optimized: bFullTime },
+            { label: 'GET /books (paginated)', baseline: bFullTime, optimized: m.optimized?.pagination?.time_total },
+            { label: 'GET /books/select (fields)', baseline: bFullTime, optimized: m.optimized?.fields_filter?.time_total },
+            { label: 'GET /books (gzip)', baseline: bFullTime, optimized: m.optimized?.gzip_compression?.time_total },
+            { label: 'GET /books/1 (1er appel)', baseline: bFullTime, optimized: m.optimized?.etag_first_call?.time_total },
+            { label: 'GET /books/1 (ETag 304)', baseline: bFullTime, optimized: m.optimized?.etag_304?.time_total },
+            { label: 'GET /books/changes (delta)', baseline: bFullTime, optimized: m.optimized?.delta_changes?.time_total },
+            { label: 'GET /books/1/summary (range)', baseline: bFullTime, optimized: m.optimized?.range_206?.time_total },
+        ];
+    }
 
     const maxTime = Math.max(...timeComparisons.map(c => Math.max(c.baseline || 0, c.optimized || 0)), 0.001);
 
@@ -850,18 +875,44 @@ function renderReport(report) {
     const tbody = document.getElementById('measurements-body');
     tbody.innerHTML = '';
 
-    const rows = [
-        { ep: 'GET /books (full naïf)', ...(m.optimized?.full_payload || m.baseline?.full_payload), rule: '—' },
-        { ep: 'GET /books/1 (baseline)', ...m.baseline?.single_resource, rule: '—' },
-        { ep: 'GET /books?page&size', ...m.optimized?.pagination, rule: 'DE11' },
-        { ep: 'GET /books/select?fields', ...m.optimized?.fields_filter, rule: 'DE08' },
-        { ep: 'GET /books/select (gzip)', ...m.optimized?.gzip_compression, rule: 'DE01' },
-        { ep: 'GET /books/1 (ETag 1st)', ...m.optimized?.etag_first_call, rule: 'DE02' },
-        { ep: 'GET /books/1 (ETag 304)', ...m.optimized?.etag_304, rule: 'DE02/03' },
-        { ep: 'GET /books/changes', ...m.optimized?.delta_changes, rule: 'DE06' },
-        { ep: 'GET /books/1/summary (206)', ...m.optimized?.range_206, rule: '206' },
-        { ep: 'GET /books/cbor', ...m.optimized?.cbor_format, rule: 'AR02' },
-    ];
+    // ── Build rows dynamically from auto_discovery or fallback to legacy ──
+    let rows = [];
+    const disc = currentReport.auto_discovery?.discovered_endpoints;
+    if (disc && disc.length > 0) {
+        // Dynamic rows from auto-discovered endpoints
+        for (const ep of disc) {
+            const label = `${ep.method} ${ep.path}${ep.summary ? ' (' + ep.summary + ')' : ''}`;
+            // Try to detect rule from path
+            const pl = ep.path.toLowerCase();
+            let rule = '--';
+            if (pl.includes('change') || pl.includes('delta')) rule = 'DE06';
+            else if (pl.includes('cbor') || pl.includes('protobuf')) rule = 'AR02';
+            else if (pl.includes('select') || pl.includes('fields')) rule = 'DE08';
+            else if (pl.includes('summary')) rule = '206';
+            rows.push({
+                ep: label,
+                http_code: ep.http_code || 0,
+                size_download: ep.size_download || 0,
+                time_total: ep.time_total || 0,
+                speed_download: ep.speed_download || 0,
+                rule: rule,
+            });
+        }
+    } else {
+        // Legacy fallback: hardcoded keys
+        rows = [
+            { ep: 'GET /books (full naif)', ...(m.optimized?.full_payload || m.baseline?.full_payload), rule: '--' },
+            { ep: 'GET /books/1 (baseline)', ...m.baseline?.single_resource, rule: '--' },
+            { ep: 'GET /books?page&size', ...m.optimized?.pagination, rule: 'DE11' },
+            { ep: 'GET /books/select?fields', ...m.optimized?.fields_filter, rule: 'DE08' },
+            { ep: 'GET /books/select (gzip)', ...m.optimized?.gzip_compression, rule: 'DE01' },
+            { ep: 'GET /books/1 (ETag 1st)', ...m.optimized?.etag_first_call, rule: 'DE02' },
+            { ep: 'GET /books/1 (ETag 304)', ...m.optimized?.etag_304, rule: 'DE02/03' },
+            { ep: 'GET /books/changes', ...m.optimized?.delta_changes, rule: 'DE06' },
+            { ep: 'GET /books/1/summary (206)', ...m.optimized?.range_206, rule: '206' },
+            { ep: 'GET /books/cbor', ...m.optimized?.cbor_format, rule: 'AR02' },
+        ].filter(r => r.http_code);
+    }
 
     for (const r of rows) {
         const code = r.http_code || 0;
