@@ -530,6 +530,30 @@
                 <canvas id="timeline-canvas"></canvas>
             </div>
         </div>
+
+        <!-- Energy History Timeline -->
+        <div class="card" id="energy-history-card" style="display:none;grid-column:1/-1;">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">⚡ Historique Consommation Énergie <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="energy-history-accordion">
+                <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.8rem;">
+                    <span style="color:#ef4444;">● Énergie naive / full (Wh)</span>
+                    <span style="color:#22c55e;">● Énergie optimisée (Wh)</span>
+                </div>
+                <canvas id="energy-timeline-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- CO2 History Timeline -->
+        <div class="card" id="co2-history-card" style="display:none;grid-column:1/-1;">
+            <button class="accordion-toggle" aria-expanded="false" onclick="toggleAccordion(this)">🌍 Historique Émissions CO₂ <span class="chevron">▼</span></button>
+            <div class="accordion-body collapsed" id="co2-history-accordion">
+                <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.8rem;">
+                    <span style="color:#ef4444;">● CO₂ naive (g)</span>
+                    <span style="color:#3b82f6;">● CO₂ optimisée (g)</span>
+                </div>
+                <canvas id="co2-timeline-canvas"></canvas>
+            </div>
+        </div>
         </div>
     </div><!-- /dashboard-main -->
     </div><!-- /dashboard-layout -->
@@ -574,12 +598,34 @@ function loadFromUrl() {
 function addToHistory(report) {
     // Avoid duplicates by timestamp
     if (!history.find(h => h.timestamp === report.timestamp)) {
+        // Compute energy & CO2 for this report
+        const m = report.measurements || {};
+        const optKeys = ['pagination','fields_filter','gzip_compression','etag_304','delta_changes','range_206'];
+        let eWh = 0;
+        for (const k of optKeys) {
+            const ep = m.optimized?.[k];
+            if (ep) {
+                eWh += energyNetworkWh(ep.size_download || 0) + energyServerWh(ep.time_total || 0);
+            }
+        }
+        const co2 = energyWhToCO2g(eWh);
+
+        // Naive full payload energy (non optimisé)
+        const naiveSize = m.optimized?.full_payload?.size_download || m.baseline?.full_payload?.size_download || 0;
+        const naiveTime = m.optimized?.full_payload?.time_total || m.baseline?.full_payload?.time_total || 0;
+        const naiveWh = energyNetworkWh(naiveSize) + energyServerWh(naiveTime);
+        const naiveCO2 = energyWhToCO2g(naiveWh);
+
         history.push({
             timestamp: report.timestamp,
             total: report.green_score.total,
             max: report.green_score.max || 9,
             grade: report.green_score.grade,
-            breakdown: report.green_score.breakdown
+            breakdown: report.green_score.breakdown,
+            energyWh: eWh,
+            co2g: co2,
+            naiveEnergyWh: naiveWh,
+            naiveCO2g: naiveCO2
         });
         history.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
         // Keep last 50
@@ -936,6 +982,8 @@ function renderReport(report) {
 
     // History
     renderHistory();
+    renderEnergyHistory();
+    renderCO2History();
 }
 
 function renderHistory() {
@@ -1019,6 +1067,178 @@ function renderHistory() {
 }
 
 // ─── Accordion ─────────────────────────────────────────────────
+function renderEnergyHistory() {
+    const card = document.getElementById('energy-history-card');
+    const hasData = history.some(h => (h.energyWh || 0) > 0 || (h.naiveEnergyWh || 0) > 0);
+    if (history.length < 1 || !hasData) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    const canvas = document.getElementById('energy-timeline-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 220 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '220px';
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width, H = 220;
+    const pad = { top: 20, right: 30, bottom: 40, left: 60 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, W, H);
+
+    const naiveVals = history.map(h => h.naiveEnergyWh || 0);
+    const energyVals = history.map(h => h.energyWh || 0);
+    const maxY = Math.max(...naiveVals, ...energyVals, 0.0001);
+    const n = history.length;
+
+    // Grid + Y axis
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.strokeStyle = '#374151'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+        ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+        const v = maxY - (maxY / 4) * i;
+        ctx.fillText(v < 0.01 ? v.toExponential(1) : v.toFixed(3), pad.left - 6, y + 4);
+    }
+    // Axis label
+    ctx.save(); ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.translate(12, pad.top + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Énergie (Wh)', 0, 0); ctx.restore();
+
+    function drawCurve(vals, color, dashed) {
+        ctx.setLineDash(dashed ? [6, 3] : []);
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+        if (n === 1) {
+            const x = pad.left + plotW / 2, y = pad.top + plotH * (1 - vals[0] / maxY);
+            ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+            ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(vals[0].toFixed(4) + ' Wh', x, y - 12);
+        } else {
+            const stepX = plotW / (n - 1);
+            for (let i = 0; i < n; i++) {
+                const x = pad.left + stepX * i, y = pad.top + plotH * (1 - vals[i] / maxY);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            for (let i = 0; i < n; i++) {
+                const x = pad.left + stepX * i, y = pad.top + plotH * (1 - vals[i] / maxY);
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+                if (i === 0 || i === n - 1 || i % Math.max(1, Math.floor(n / 5)) === 0) {
+                    ctx.fillStyle = '#d1d5db'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(vals[i].toFixed(4), x, y - 8);
+                }
+            }
+        }
+        ctx.setLineDash([]);
+    }
+
+    drawCurve(naiveVals, '#ef4444', true);
+    drawCurve(energyVals, '#22c55e', false);
+
+    // Dates
+    if (n === 1) {
+        ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(history[0].timestamp.slice(0, 10), pad.left + plotW / 2, H - 8);
+    } else {
+        const stepX = plotW / (n - 1);
+        for (let i = 0; i < n; i++) {
+            if (i % Math.max(1, Math.floor(n / 6)) === 0 || i === n - 1) {
+                ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(history[i].timestamp.slice(5, 10), pad.left + stepX * i, H - 8);
+            }
+        }
+    }
+}
+
+function renderCO2History() {
+    const card = document.getElementById('co2-history-card');
+    const hasData = history.some(h => (h.co2g || 0) > 0 || (h.naiveCO2g || 0) > 0);
+    if (history.length < 1 || !hasData) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    const canvas = document.getElementById('co2-timeline-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 220 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '220px';
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width, H = 220;
+    const pad = { top: 20, right: 30, bottom: 40, left: 60 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, W, H);
+
+    const naiveCO2 = history.map(h => h.naiveCO2g || 0);
+    const optCO2 = history.map(h => h.co2g || 0);
+    const maxY = Math.max(...naiveCO2, ...optCO2, 0.0001);
+    const n = history.length;
+
+    // Grid + Y axis
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.strokeStyle = '#374151'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+        ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+        const v = maxY - (maxY / 4) * i;
+        ctx.fillText(v < 0.001 ? v.toExponential(1) : v.toFixed(4), pad.left - 6, y + 4);
+    }
+    // Axis label
+    ctx.save(); ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.translate(12, pad.top + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('CO₂ (g)', 0, 0); ctx.restore();
+
+    function drawCurve(vals, color, dashed) {
+        ctx.setLineDash(dashed ? [6, 3] : []);
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+        if (n === 1) {
+            const x = pad.left + plotW / 2, y = pad.top + plotH * (1 - vals[0] / maxY);
+            ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+            ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(vals[0].toFixed(5) + ' g', x, y - 12);
+        } else {
+            const stepX = plotW / (n - 1);
+            for (let i = 0; i < n; i++) {
+                const x = pad.left + stepX * i, y = pad.top + plotH * (1 - vals[i] / maxY);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            for (let i = 0; i < n; i++) {
+                const x = pad.left + stepX * i, y = pad.top + plotH * (1 - vals[i] / maxY);
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+                if (i === 0 || i === n - 1 || i % Math.max(1, Math.floor(n / 5)) === 0) {
+                    ctx.fillStyle = '#d1d5db'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(vals[i].toFixed(5), x, y - 8);
+                }
+            }
+        }
+        ctx.setLineDash([]);
+    }
+
+    drawCurve(naiveCO2, '#ef4444', true);
+    drawCurve(optCO2, '#3b82f6', false);
+
+    // Dates
+    if (n === 1) {
+        ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(history[0].timestamp.slice(0, 10), pad.left + plotW / 2, H - 8);
+    } else {
+        const stepX = plotW / (n - 1);
+        for (let i = 0; i < n; i++) {
+            if (i % Math.max(1, Math.floor(n / 6)) === 0 || i === n - 1) {
+                ctx.fillStyle = '#d1d5db'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(history[i].timestamp.slice(5, 10), pad.left + stepX * i, H - 8);
+            }
+        }
+    }
+}
+
 function toggleAccordion(btn) {
     const expanded = btn.getAttribute('aria-expanded') === 'true';
     btn.setAttribute('aria-expanded', String(!expanded));
@@ -1293,9 +1513,13 @@ window.addEventListener('DOMContentLoaded', () => {
             .catch(() => { /* no latest report, show empty state */ });
     }
     renderHistory();
+    renderEnergyHistory();
+    renderCO2History();
 });
 
-window.addEventListener('resize', () => { if (history.length > 0) renderHistory(); });
+window.addEventListener('resize', () => {
+    if (history.length > 0) { renderHistory(); renderEnergyHistory(); renderCO2History(); }
+});
 </script>
 </body>
 </html>
