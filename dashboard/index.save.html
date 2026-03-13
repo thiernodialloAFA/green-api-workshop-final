@@ -26,75 +26,56 @@
             background: linear-gradient(135deg, var(--gray-900) 0%, var(--green-900) 100%);
             color: var(--gray-100);
             min-height: 100vh;
-            padding: 24px;
+            padding: 20px;
         }
         .header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2.15rem;
             background: linear-gradient(135deg, var(--green-400), var(--green-200));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .header .subtitle {
             color: var(--gray-400);
-            font-size: 1.1rem;
+            font-size: 1.0rem;
         }
         .header .badge {
             display: inline-block;
             background: var(--green-800);
             color: var(--green-200);
-            padding: 4px 16px;
+            padding: 4px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
-            margin-top: 8px;
+            font-size: 0.8rem;
+            margin-top: 6px;
         }
-        .controls {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .controls button, .controls label {
-            background: var(--gray-800);
-            border: 1px solid var(--gray-600);
-            color: var(--gray-200);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-        .controls button:hover { background: var(--green-700); border-color: var(--green-500); }
-        .controls input[type="file"] { display: none; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 17px; max-width: 1400px; margin: 0 auto; }
         .card {
             background: rgba(31,41,55,0.85);
             border: 1px solid var(--gray-700);
             border-radius: var(--radius);
-            padding: 24px;
+            padding: 18px 20px;
             box-shadow: var(--shadow);
             backdrop-filter: blur(8px);
         }
         .card h2 {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: var(--green-400);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
         }
         .score-hero {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 40px;
+            padding: 30px;
         }
         .score-circle {
-            width: 200px; height: 200px;
+            width: 175px; height: 175px;
             border-radius: 50%;
             display: inline-flex;
             flex-direction: column;
@@ -103,77 +84,77 @@
             margin: 0 auto 16px;
             position: relative;
         }
-        .score-circle .number { font-size: 3.5rem; font-weight: 800; }
-        .score-circle .max { font-size: 1rem; color: var(--gray-400); }
+        .score-circle .number { font-size: 3.0rem; font-weight: 800; }
+        .score-circle .max { font-size: 0.92rem; color: var(--gray-400); }
         .score-circle .grade {
             position: absolute;
-            top: -10px; right: -10px;
+            top: -9px; right: -9px;
             background: var(--green-500);
             color: white;
-            width: 48px; height: 48px;
+            width: 43px; height: 43px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem; font-weight: 800;
+            font-size: 1.15rem; font-weight: 800;
             box-shadow: var(--shadow-lg);
         }
         .rule-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid var(--gray-700);
         }
         .rule-row:last-child { border-bottom: none; }
-        .rule-name { font-weight: 600; }
+        .rule-name { font-weight: 600; font-size: 0.9rem; }
         .rule-score {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 3px 11px;
             border-radius: 6px;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .rule-score.good { background: var(--green-800); color: var(--green-200); }
         .rule-score.medium { background: rgba(234,179,8,0.2); color: var(--yellow-400); }
         .rule-score.bad { background: rgba(239,68,68,0.2); color: var(--red-400); }
-        .bar-container { width: 100%; background: var(--gray-700); border-radius: 6px; height: 24px; overflow: hidden; margin: 6px 0; }
-        .bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white; }
+        .bar-container { width: 100%; background: var(--gray-700); border-radius: 6px; height: 21px; overflow: hidden; margin: 5px 0; }
+        .bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 7px; font-size: 0.7rem; font-weight: 600; color: white; }
         .bar.baseline { background: var(--red-500); }
         .bar.optimized { background: var(--green-500); }
         .bar.time-baseline { background: linear-gradient(90deg, var(--red-500), var(--red-400)); }
         .bar.time-optimized { background: linear-gradient(90deg, var(--green-500), var(--green-400)); }
-        .time-row { margin-bottom: 12px; }
-        .time-row .endpoint-label { font-size: 0.85rem; color: var(--gray-300); margin-bottom: 4px; font-weight: 600; }
-        .time-pair { display: grid; grid-template-columns: 70px 1fr 80px; align-items: center; gap: 8px; margin: 3px 0; }
-        .time-pair .label { font-size: 0.75rem; color: var(--gray-400); text-align: right; }
-        .time-pair .bar-container { margin: 0; height: 18px; }
-        .time-pair .value { font-size: 0.75rem; color: var(--gray-300); font-weight: 600; }
-        .time-speedup { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; margin-left: 8px; }
+        .time-row { margin-bottom: 10px; }
+        .time-row .endpoint-label { font-size: 0.82rem; color: var(--gray-300); margin-bottom: 4px; font-weight: 600; }
+        .time-pair { display: grid; grid-template-columns: 65px 1fr 75px; align-items: center; gap: 7px; margin: 3px 0; }
+        .time-pair .label { font-size: 0.72rem; color: var(--gray-400); text-align: right; }
+        .time-pair .bar-container { margin: 0; height: 16px; }
+        .time-pair .value { font-size: 0.72rem; color: var(--gray-300); font-weight: 600; }
+        .time-speedup { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 0.66rem; font-weight: 700; margin-left: 7px; }
         .time-speedup.faster { background: var(--green-800); color: var(--green-200); }
         .time-speedup.slower { background: rgba(239,68,68,0.2); color: var(--red-400); }
-        .comparison-row { margin-bottom: 14px; }
-        .comparison-label { font-size: 0.85rem; color: var(--gray-400); margin-bottom: 4px; }
-        .comparison-values { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--gray-300); }
+        .comparison-row { margin-bottom: 12px; }
+        .comparison-label { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 4px; }
+        .comparison-values { display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--gray-300); }
         .gain-badge {
             display: inline-block;
-            padding: 2px 10px;
+            padding: 2px 9px;
             border-radius: 12px;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 700;
         }
         .gain-badge.positive { background: var(--green-800); color: var(--green-200); }
         .gain-badge.negative { background: rgba(239,68,68,0.2); color: var(--red-400); }
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .metric-item { text-align: center; padding: 12px; background: var(--gray-800); border-radius: 8px; }
-        .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--green-400); }
-        .metric-label { font-size: 0.8rem; color: var(--gray-400); margin-top: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th { text-align: left; color: var(--green-400); padding: 8px 6px; border-bottom: 2px solid var(--gray-600); }
-        td { padding: 8px 6px; border-bottom: 1px solid var(--gray-700); }
-        .history-chart { width: 100%; height: 200px; position: relative; }
-        .empty-state { text-align: center; padding: 40px; color: var(--gray-500); }
-        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-        #timeline-canvas { width: 100%; height: 200px; }
-        .footer { text-align: center; margin-top: 40px; color: var(--gray-500); font-size: 0.85rem; }
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .metric-item { text-align: center; padding: 10px; background: var(--gray-800); border-radius: 8px; }
+        .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--green-400); }
+        .metric-label { font-size: 0.75rem; color: var(--gray-400); margin-top: 3px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+        th { text-align: left; color: var(--green-400); padding: 6px 5px; border-bottom: 2px solid var(--gray-600); }
+        td { padding: 6px 5px; border-bottom: 1px solid var(--gray-700); }
+        .history-chart { width: 100%; height: 180px; position: relative; }
+        .empty-state { text-align: center; padding: 32px; color: var(--gray-500); }
+        .empty-state .icon { font-size: 2.6rem; margin-bottom: 10px; }
+        #timeline-canvas { width: 100%; height: 180px; }
+        .footer { text-align: center; margin-top: 32px; color: var(--gray-500); font-size: 0.8rem; }
         .footer a { color: var(--green-400); text-decoration: none; }
 
         /* ─── Accordéon ─────────────────────────────────────── */
@@ -182,11 +163,11 @@
             background: none;
             border: none;
             color: var(--green-400);
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             cursor: pointer;
             padding: 0;
             margin-bottom: 0;
@@ -197,7 +178,7 @@
         .accordion-toggle .chevron {
             margin-left: auto;
             transition: transform 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .accordion-toggle[aria-expanded="false"] .chevron {
             transform: rotate(-90deg);
@@ -217,50 +198,50 @@
             margin-top: 0;
         }
         .accordion-body:not(.collapsed) {
-            margin-top: 16px;
+            margin-top: 13px;
         }
 
         /* ─── Layout principal : sidebar + contenu ────────── */
         .dashboard-layout {
             display: flex;
-            gap: 20px;
+            gap: 17px;
             max-width: 1680px;
             margin: 0 auto;
             align-items: flex-start;
         }
         .sidebar-panel {
-            width: 260px;
-            min-width: 260px;
+            width: 250px;
+            min-width: 250px;
             background: rgba(31,41,55,0.92);
             border: 1px solid var(--gray-700);
             border-radius: var(--radius);
-            padding: 20px 16px;
+            padding: 17px 14px;
             box-shadow: var(--shadow);
             backdrop-filter: blur(8px);
             position: sticky;
-            top: 24px;
+            top: 20px;
         }
         .sidebar-panel h3 {
-            font-size: 1rem;
+            font-size: 0.94rem;
             color: var(--green-400);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         .sidebar-panel .param-group {
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }
         .sidebar-panel .param-label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             color: var(--gray-300);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-weight: 600;
         }
         .sidebar-panel .param-sublabel {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.66rem;
             color: var(--gray-500);
             margin-top: 2px;
         }
@@ -275,8 +256,8 @@
             border: 1px solid var(--gray-600);
             color: var(--gray-100);
             border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 0.85rem;
+            padding: 5px 9px;
+            font-size: 0.82rem;
             font-weight: 600;
         }
         .sidebar-panel input[type="number"]:focus {
@@ -288,22 +269,22 @@
             display: inline-block;
             background: var(--green-800);
             color: var(--green-200);
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 700;
             float: right;
         }
         .sidebar-panel .reset-btn {
             width: 100%;
-            margin-top: 8px;
+            margin-top: 7px;
             background: var(--gray-700);
             border: 1px solid var(--gray-600);
             color: var(--gray-300);
-            padding: 8px;
+            padding: 7px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             transition: all 0.2s;
         }
         .sidebar-panel .reset-btn:hover {
@@ -319,13 +300,63 @@
             max-width: 100%;
         }
 
+        /* ─── Sidebar droite : actions ────────────────────── */
+        .sidebar-right {
+            width: 208px;
+            min-width: 208px;
+            background: rgba(31,41,55,0.92);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius);
+            padding: 17px 14px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+        .sidebar-right h3 {
+            font-size: 0.94rem;
+            color: var(--green-400);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sidebar-right .action-btn,
+        .sidebar-right .action-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            width: 100%;
+            background: var(--gray-800);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-200);
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: left;
+            font-family: inherit;
+        }
+        .sidebar-right .action-btn:hover,
+        .sidebar-right .action-label:hover {
+            background: var(--green-700);
+            border-color: var(--green-500);
+            color: white;
+        }
+        .sidebar-right input[type="file"] { display: none; }
+
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.5rem; }
+            .header h1 { font-size: 1.4rem; }
             .grid { grid-template-columns: 1fr; }
-            .score-circle { width: 150px; height: 150px; }
-            .score-circle .number { font-size: 2.5rem; }
+            .score-circle { width: 135px; height: 135px; }
+            .score-circle .number { font-size: 2.25rem; }
             .dashboard-layout { flex-direction: column; }
-            .sidebar-panel { width: 100%; min-width: 0; position: static; }
+            .sidebar-panel, .sidebar-right { width: 100%; min-width: 0; position: static; }
         }
     </style>
 </head>
@@ -334,16 +365,6 @@
         <h1>🌿 Green API Score Dashboard</h1>
         <div class="subtitle">Green Architecture : moins de gras, plus d'impact, plus d'efficacité !</div>
         <div class="badge">Devoxx France 2026 — Tools in Action</div>
-    </div>
-
-    <div class="controls">
-        <label for="file-input">📂 Charger un rapport JSON
-            <input type="file" id="file-input" accept=".json" multiple>
-        </label>
-        <button onclick="loadFromUrl()">🔗 Charger depuis URL</button>
-        <button onclick="loadSampleData()">🧪 Données démo</button>
-        <button onclick="exportPng()">📸 Exporter PNG</button>
-        <button onclick="clearHistory()">🗑️ Réinitialiser</button>
     </div>
 
     <div class="dashboard-layout">
@@ -556,6 +577,19 @@
         </div>
         </div>
     </div><!-- /dashboard-main -->
+
+        <!-- Sidebar droite : Actions -->
+        <div class="sidebar-right" id="actions-panel">
+            <h3>🎛️ Actions</h3>
+            <label class="action-label" for="file-input">📂 Charger rapport JSON
+                <input type="file" id="file-input" accept=".json" multiple>
+            </label>
+            <button class="action-btn" onclick="loadFromUrl()">🔗 Charger depuis URL</button>
+            <button class="action-btn" onclick="loadSampleData()">🧪 Données démo</button>
+            <button class="action-btn" onclick="exportPng()">📸 Exporter PNG</button>
+            <button class="action-btn" onclick="clearHistory()" style="border-color:var(--red-500);color:var(--red-400);">🗑️ Réinitialiser</button>
+        </div>
+
     </div><!-- /dashboard-layout -->
 
     <div class="footer">
