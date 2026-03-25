@@ -7,8 +7,6 @@
 > Vos APIs ont pris un peu de poids ? Elles consomment plus que nécessaire ?
 > Pas de panique, on sort la boîte à outils pour leur faire un **Green relooking** !
 
-[![Green API Score CI](https://github.com/YOUR_ORG/green-api-workshop-devoxx/actions/workflows/pr-green-api.yml/badge.svg)](https://github.com/YOUR_ORG/green-api-workshop-devoxx/actions)
-
 ---
 
 ## 🎯 Objectif
