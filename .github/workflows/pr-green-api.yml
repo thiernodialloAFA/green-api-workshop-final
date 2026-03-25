@@ -99,34 +99,20 @@ jobs:
           B_SIZE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['baseline']['full_payload']['size_download'])")
           O_SIZE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['optimized']['pagination']['size_download'])")
           echo "Baseline: ${B_SIZE} bytes | Optimized paginated: ${O_SIZE} bytes" >> $GITHUB_STEP_SUMMARY
-          python3 -c "
-          b=$B_SIZE; o=$O_SIZE
-          assert o < b / 10, f'FAIL: optimized ({o}) >= baseline/10 ({b/10})'
-          print('✅ Pagination assertion PASSED')
-          "
+          python3 -c "b=$B_SIZE; o=$O_SIZE; assert o < b / 10, f'FAIL: optimized ({o}) >= baseline/10 ({b/10})'; print('✅ Pagination assertion PASSED')"
 
           # Assert 304
           ETAG_CODE=$(python3 -c "import json;r=json.load(open('$REPORT'));print(r['measurements']['optimized']['etag_304']['http_code'])")
-          python3 -c "
-          assert $ETAG_CODE == 304, f'FAIL: expected 304, got $ETAG_CODE'
-          print('✅ ETag 304 assertion PASSED')
-          "
+          python3 -c "assert $ETAG_CODE == 304, f'FAIL: expected 304, got $ETAG_CODE'; print('✅ ETag 304 assertion PASSED')"
 
           # Assert Green Score >= 50
-          python3 -c "
-          assert $TOTAL >= 50, f'FAIL: Green Score {$TOTAL} < 50'
-          print('✅ Green Score >= 50 PASSED')
-          "
+          python3 -c "assert $TOTAL >= 50, f'FAIL: Green Score {$TOTAL} < 50'; print('✅ Green Score >= 50 PASSED')"
 
           # Regression gate (optional): green-score-threshold.json
           if [ -f green-score-threshold.json ]; then
             MIN_SCORE=$(python3 -c "import json;print(json.load(open('green-score-threshold.json'))['minScore'])")
             echo "Min score threshold: ${MIN_SCORE}" >> $GITHUB_STEP_SUMMARY
-            python3 -c "
-            total=$TOTAL; minimum=$MIN_SCORE
-            assert total >= minimum, f'FAIL: Green Score {total} < threshold {minimum}'
-            print('✅ Green Score threshold PASSED')
-            "
+            python3 -c "total=$TOTAL; minimum=$MIN_SCORE; assert total >= minimum, f'FAIL: Green Score {total} < threshold {minimum}'; print('✅ Green Score threshold PASSED')"
           fi
 
       - name: Upload report
