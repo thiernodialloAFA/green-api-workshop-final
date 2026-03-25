@@ -15,24 +15,17 @@
 
 Appliquer pas à pas le framework **[API Green Score](https://github.com/API-Green-Score/APIGreenScore)** sur une API réelle, avec des **outils open-source** et des **métriques concrètes**, pour obtenir une API plus légère, plus rapide, et un impact environnemental réduit.
 
-## 📐 Règles API Green Score couvertes
-Practical workshop (50 min) to reduce the footprint of HTTP APIs by applying the **API Green Score** rules:
+## 📐 Règles API Green Score couvertes dans cette demo
 - **DE11** Pagination, **DE08** Filtering, **US01** Query params
 - **DE01/USXX** Compression (Gzip), **DE02/DE03** HTTP Cache (ETag/304)
-- **DE06/US04** Delta (changes since), **206** Partial Content (Range)
-- Useful logs (**LO01**) & error monitoring (**US07**)
 
-| Catégorie | Règle | Description | Points |
-|-----------|-------|-------------|--------|
-| Data Exchange | **DE11** | Pagination obligatoire | 15 |
-| Data Exchange | **DE08** | Filtrage de champs (`fields=`) | 15 |
-| Data Exchange | **DE01** | Compression (Gzip/Brotli) | 15 |
-| Data Exchange | **DE02/DE03** | Cache HTTP (ETag → 304) | 15 |
-| Data Exchange | **DE06** | Delta (`/changes?since=`) | 10 |
-| Data Exchange | **206** | Partial Content (Range) | 10 |
-| Usage | **LO01** | Observabilité (logs payload/latence) | 5 |
-| Usage | **US07** | Rate Limiting | 5 |
-| Architecture | **AR02** | Format binaire (CBOR) | 10 |
+| Catégorie | Règle | Description | Points  |
+|-----------|-------|-------------|---------|
+| Data Exchange | **DE11** | Pagination obligatoire | 15      |
+| Data Exchange | **DE08** | Filtrage de champs (`fields=`) | 25      |
+| Data Exchange | **DE01** | Compression (Gzip/Brotli) | 30      |
+| Usage | **LO01** | Observabilité (logs payload/latence) | 15      |
+| Usage | **US07** | Rate Limiting | 15      |
 | | | **Total** | **100** |
 
 ## 📁 Structure du projet
@@ -66,45 +59,99 @@ green-api-workshop-devoxx/
 
 ## 🚀 Démarrage rapide
 
-### Option 0 : Script start (local)
+> ⚠️ **ATTENTION — Les options ci-dessous sont EXCLUSIVES.**
+> Choisissez **une seule** option de démarrage. Ne les lancez **pas** en parallèle : chaque option démarre les mêmes services sur les mêmes ports.
 
-```bash
-# Dataset plus gros pour accentuer le contraste avant/après
-DATASET_SIZE=1000000 bash scripts/start.sh --analyze
-```
+---
 
-```powershell
-$env:DATASET_SIZE=1000000
-.\scripts\start.ps1 -Analyze
-```
+### 🅰️ Option 0 : Script start (local)
 
-### Option 1 : Maven (local)
+> **🐧 Linux / macOS**
+> ```bash
+> # Dataset plus gros pour accentuer le contraste avant/après
+> DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+> ```
 
-```bash
-# Terminal 1 — Baseline (API naïve, port 8080)
-cd green-api-baseline && mvn spring-boot:run
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> $env:DATASET_SIZE=1000000
+> .\scripts\start.ps1 -Analyze
+> ```
 
-# Terminal 2 — Optimized (API green, port 8081)
-cd green-api-optimized && mvn spring-boot:run
+---
 
-# Terminal 3 — Analyse automatisée
-cd scripts && bash green-score-analyzer.sh
-```
+### ──────────────────── OU ────────────────────
 
-### Option 2 : Docker Compose
+---
 
-```bash
-docker-compose up --build
-# → Baseline:  http://localhost:8080
-# → Optimized: http://localhost:8081
-# → Dashboard: http://localhost:3000
-```
+### 🅱️ Option 1 : Maven (local)
 
-### Option 3 : Script de démo (présentation live)
+> **🐧 Linux / macOS: sur 3 terminaux en //**
+> ```bash
+> # Terminal 1 — Baseline (API naïve, port 8080)
+> cd green-api-baseline && mvn spring-boot:run
+>
+> # Terminal 2 — Optimized (API green, port 8081)
+> cd green-api-optimized && mvn spring-boot:run
+>
+> # Terminal 3 — Analyse automatisée
+> cd scripts && bash green-score-analyzer.sh
+> ```
 
-```bash
-DATASET_SIZE=1000000 bash scripts/run-demo_light.sh
-```
+> **🪟 Windows (PowerShell): sur 3 terminaux en //**
+> ```powershell
+> # Terminal 1 — Baseline (API naïve, port 8080)
+> cd green-api-baseline ; mvn spring-boot:run
+>
+> # Terminal 2 — Optimized (API green, port 8081)
+> cd green-api-optimized ; mvn spring-boot:run
+>
+> # Terminal 3 — Analyse automatisée
+> cd scripts ; .\green-score-analyzer.ps1
+> ```
+
+---
+
+### ──────────────────── OU ────────────────────
+
+---
+
+### 🅲 Option 2 : Docker Compose
+
+> **🐧 Linux / macOS**
+> ```bash
+> docker-compose up --build
+> # → Baseline:  http://localhost:8080
+> # → Optimized: http://localhost:8081
+> # → Dashboard: http://localhost:3000
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> docker-compose up --build
+> # → Baseline:  http://localhost:8080
+> # → Optimized: http://localhost:8081
+> # → Dashboard: http://localhost:3000
+> ```
+
+---
+
+### ──────────────────── OU ────────────────────
+
+---
+
+### 🅳 Option 3 : Script de démo (présentation live)
+
+> **🐧 Linux / macOS**
+> ```bash
+> DATASET_SIZE=1000000 bash scripts/run-demo_light.sh
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> $env:DATASET_SIZE=1000000
+> .\scripts\run-demo_light.ps1
+> ```
 
 ## 📊 Dashboard
 
@@ -138,21 +185,6 @@ Chaque PR déclenche automatiquement :
 - [API Green Score — Training](https://github.com/API-Green-Score/training-student)
 - [Spectral — OpenAPI Linter](https://stoplight.io/open-source/spectral)
 - [Devoxx France](https://www.devoxx.fr/)
-
-## 🎓 Aller plus loin — Workshop pratique
-
-Envie de passer de la théorie à la pratique ? Le **[Workshop clé-en-main](WORKSHOP.md)** vous guide pas à pas (30 min) pour appliquer concrètement chaque optimisation sur une API réelle :
-
-- 🔴 Partez d'une API naïve (baseline) et constatez les dégâts (payload massif, temps de réponse élevé)
-- 🟢 Appliquez les bonnes pratiques une par une (pagination, compression, cache, delta, CBOR…)
-- 📊 Mesurez l'impact réel de chaque optimisation avec le Green Score Analyzer
-- ⚡ Traduisez les gains en **consommation d'énergie** et **émissions CO₂**
-
-> 💡 Ce workshop est conçu pour aller plus loin dans la pratique et vous permettre de reproduire l'intégralité de la démarche sur vos propres APIs. Idéal en autonomie, en équipe ou en session de live-coding.
-
-👉 **[Démarrer le Workshop →](WORKSHOP.md)**
-
----
 
 ## 📝 Documents de l'atelier
 

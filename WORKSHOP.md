@@ -29,9 +29,15 @@ Java 17+, Maven 3.9+, `curl`, Python 3 (pour l'analyseur).
 
 Tout est lancé en une seule commande : build, démarrage des 2 APIs, mesures et analyse.
 
-```bash
-bash scripts/run-demo.sh
-```
+> **🐧 Linux / macOS**
+> ```bash
+> bash scripts/run-demo.sh
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> .\scripts\run-demo.ps1
+> ```
 
 ---
 
@@ -43,73 +49,153 @@ bash scripts/run-demo.sh
 
 Pour garder la main sur chaque étape et explorer à votre rythme.
 
-```bash
-# Terminal 1 — Baseline (port 8080)
-cd green-api-baseline && mvn spring-boot:run
+> **🐧 Linux / macOS**
+> ```bash
+> # Terminal 1 — Baseline (port 8080)
+> cd green-api-baseline && mvn spring-boot:run
+>
+> # Terminal 2 — Optimized (port 8081)
+> cd green-api-optimized && mvn spring-boot:run
+>
+> # Terminal 3 — Mesures
+> cd scripts && bash scripts/run-demo_light.sh
+> ```
 
-# Terminal 2 — Optimized (port 8081)
-cd green-api-optimized && mvn spring-boot:run
-
-# Terminal 3 — Mesures
-cd scripts && bash scripts/run-demo_light.sh
-```
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # Terminal 1 — Baseline (port 8080)
+> cd green-api-baseline ; mvn spring-boot:run
+>
+> # Terminal 2 — Optimized (port 8081)
+> cd green-api-optimized ; mvn spring-boot:run
+>
+> # Terminal 3 — Mesures
+> cd scripts ; .\run-demo_light.ps1
+> ```
 
 ---
 
 ## Live-coding : points clés
 
 ### 1. Baseline — le constat (3')
-```bash
-# 500 000 livres, pas de pagination → payload massif
-curl -s -w '\nsize=%{size_download} time=%{time_total}\n' -o /dev/null http://localhost:8080/books
-# → ~48 MB, 4+ secondes
-```
+
+> **🐧 Linux / macOS**
+> ```bash
+> # 500 000 livres, pas de pagination → payload massif
+> curl -s -w '\nsize=%{size_download} time=%{time_total}\n' -o /dev/null http://localhost:8080/books
+> # → ~48 MB, 4+ secondes
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # 500 000 livres, pas de pagination → payload massif
+> Invoke-WebRequest -Uri http://localhost:8080/books -UseBasicParsing | `
+>   Select-Object @{N='size';E={$_.RawContentLength}}, @{N='time';E={(Measure-Command { $_ }).TotalSeconds}}
+> # → ~48 MB, 4+ secondes
+> ```
 
 ### 2. Pagination + Filtrage (5')
-```bash
-# DE11 — Pagination : borner size ≤ 100
-curl -s -w '\nsize=%{size_download}\n' -o /dev/null "http://localhost:8081/books?page=0&size=20"
 
-# DE08/US01 — Filtrage de champs : exclure les champs coûteux
-curl -s -w '\nsize=%{size_download}\n' -o /dev/null \
-  "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20"
-```
+> **🐧 Linux / macOS**
+> ```bash
+> # DE11 — Pagination : borner size ≤ 100
+> curl -s -w '\nsize=%{size_download}\n' -o /dev/null "http://localhost:8081/books?page=0&size=20"
+>
+> # DE08/US01 — Filtrage de champs : exclure les champs coûteux
+> curl -s -w '\nsize=%{size_download}\n' -o /dev/null \
+>   "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20"
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # DE11 — Pagination : borner size ≤ 100
+> (Invoke-WebRequest -Uri "http://localhost:8081/books?page=0&size=20" -UseBasicParsing).RawContentLength
+>
+> # DE08/US01 — Filtrage de champs : exclure les champs coûteux
+> (Invoke-WebRequest -Uri "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20" -UseBasicParsing).RawContentLength
+> ```
 
 ### 3. Compression + Cache (5')
-```bash
-# DE01 — Gzip
-curl -s -H 'Accept-Encoding: gzip' -w '\nsize=%{size_download}\n' -o /dev/null \
-  "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50"
 
-# DE02/DE03 — ETag → 304
-ETAG=$(curl -sI http://localhost:8081/books/1 | grep -i etag | awk '{print $2}' | tr -d '\r')
-curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" http://localhost:8081/books/1
-# → 304 Not Modified, 0 bytes transférés
-```
+> **🐧 Linux / macOS**
+> ```bash
+> # DE01 — Gzip
+> curl -s -H 'Accept-Encoding: gzip' -w '\nsize=%{size_download}\n' -o /dev/null \
+>   "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50"
+>
+> # DE02/DE03 — ETag → 304
+> ETAG=$(curl -sI http://localhost:8081/books/1 | grep -i etag | awk '{print $2}' | tr -d '\r')
+> curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" http://localhost:8081/books/1
+> # → 304 Not Modified, 0 bytes transférés
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # DE01 — Gzip
+> $resp = Invoke-WebRequest -Uri "http://localhost:8081/books/select?fields=id,title,author&page=0&size=50" `
+>   -Headers @{ 'Accept-Encoding' = 'gzip' } -UseBasicParsing
+> $resp.RawContentLength
+>
+> # DE02/DE03 — ETag → 304
+> $head = Invoke-WebRequest -Uri http://localhost:8081/books/1 -Method Head -UseBasicParsing
+> $etag = $head.Headers['ETag']
+> try {
+>   Invoke-WebRequest -Uri http://localhost:8081/books/1 -Headers @{ 'If-None-Match' = $etag } -UseBasicParsing
+> } catch { $_.Exception.Response.StatusCode }
+> # → 304 Not Modified, 0 bytes transférés
+> ```
 
 ### 4. Delta + Range + CBOR (5')
-```bash
-# DE06/US04 — Delta (changes since)
-curl -s -w '\nsize=%{size_download}\n' -o /dev/null \
-  "http://localhost:8081/books/changes?since=2026-03-01T00:00:00Z"
 
-# 206 — Partial Content
-curl -s -o /dev/null -w 'http_code=%{http_code} size=%{size_download}\n' \
-  -H 'Range: bytes=0-199' http://localhost:8081/books/1/summary
+> **🐧 Linux / macOS**
+> ```bash
+> # DE06/US04 — Delta (changes since)
+> curl -s -w '\nsize=%{size_download}\n' -o /dev/null \
+>   "http://localhost:8081/books/changes?since=2026-03-01T00:00:00Z"
+>
+> # 206 — Partial Content
+> curl -s -o /dev/null -w 'http_code=%{http_code} size=%{size_download}\n' \
+>   -H 'Range: bytes=0-199' http://localhost:8081/books/1/summary
+>
+> # AR02 — CBOR (binary format)
+> curl -s -H 'Accept: application/cbor' -w '\nsize=%{size_download}\n' -o /dev/null \
+>   http://localhost:8081/books/cbor
+> ```
 
-# AR02 — CBOR (binary format)
-curl -s -H 'Accept: application/cbor' -w '\nsize=%{size_download}\n' -o /dev/null \
-  http://localhost:8081/books/cbor
-```
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # DE06/US04 — Delta (changes since)
+> (Invoke-WebRequest -Uri "http://localhost:8081/books/changes?since=2026-03-01T00:00:00Z" -UseBasicParsing).RawContentLength
+>
+> # 206 — Partial Content
+> $resp = Invoke-WebRequest -Uri http://localhost:8081/books/1/summary `
+>   -Headers @{ 'Range' = 'bytes=0-199' } -UseBasicParsing
+> "$($resp.StatusCode) — $($resp.RawContentLength) bytes"
+>
+> # AR02 — CBOR (binary format)
+> (Invoke-WebRequest -Uri http://localhost:8081/books/cbor `
+>   -Headers @{ 'Accept' = 'application/cbor' } -UseBasicParsing).RawContentLength
+> ```
 
 ### 5. Analyse automatisée + Dashboard (3')
-```bash
-# Lancer l'analyseur complet
-bash scripts/green-score-analyzer.sh
 
-# Ouvrir le dashboard
-# → dashboard/index.html (charger reports/latest-report.json)
-```
+> **🐧 Linux / macOS**
+> ```bash
+> # Lancer l'analyseur complet
+> bash scripts/green-score-analyzer.sh
+>
+> # Ouvrir le dashboard
+> # → dashboard/index.html (charger reports/latest-report.json)
+> ```
+
+> **🪟 Windows (PowerShell)**
+> ```powershell
+> # Lancer l'analyseur complet
+> .\scripts\green-score-analyzer.ps1
+>
+> # Ouvrir le dashboard
+> Start-Process "dashboard\index.html"
+> ```
 
 ### 6. CI & Spectral (2')
 - `.github/workflows/pr-green-api.yml` : build, analyse, assertions, commentaire PR

@@ -23,23 +23,23 @@ $label = "Green Score"
 $value = "$score/100 ($grade)"
 
 $svg = @"
-<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"24\" role=\"img\" aria-label=\"${label}: ${value}\">
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="24" role="img" aria-label="${label}: ${value}">
   <title>${label}: ${value}</title>
-  <linearGradient id=\"s\" x2=\"0\" y2=\"100%\">
-    <stop offset=\"0\" stop-color=\"#bbb\" stop-opacity=\".1\"/>
-    <stop offset=\"1\" stop-opacity=\".1\"/>
+  <linearGradient id="s" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
   </linearGradient>
-  <rect rx=\"4\" width=\"100\" height=\"24\" fill=\"#374151\"/>
-  <rect rx=\"4\" x=\"100\" width=\"120\" height=\"24\" fill=\"${color}\"/>
-  <rect rx=\"4\" width=\"220\" height=\"24\" fill=\"url(#s)\"/>
-  <g fill=\"#fff\" text-anchor=\"middle\" font-family=\"Verdana,DejaVu Sans,sans-serif\" font-size=\"11\">
-    <text x=\"50\" y=\"16\">${label}</text>
-    <text x=\"160\" y=\"16\">${value}</text>
+  <rect rx="4" width="100" height="24" fill="#374151"/>
+  <rect rx="4" x="100" width="120" height="24" fill="${color}"/>
+  <rect rx="4" width="220" height="24" fill="url(#s)"/>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11">
+    <text x="50" y="16">${label}</text>
+    <text x="160" y="16">${value}</text>
   </g>
 </svg>
 "@
 
 $dir = Split-Path -Parent $OutFile
 if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-$svg | Out-File -FilePath $OutFile -Encoding utf8
+[System.IO.File]::WriteAllText($OutFile, $svg, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "Badge written to $OutFile"
