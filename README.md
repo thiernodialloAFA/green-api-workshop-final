@@ -103,7 +103,7 @@ docker-compose up --build
 ### Option 3 : Script de démo (présentation live)
 
 ```bash
-DATASET_SIZE=1000000 bash scripts/run-demo.sh
+DATASET_SIZE=1000000 bash scripts/run-demo_light.sh
 ```
 
 ## 📊 Dashboard
@@ -130,18 +130,6 @@ Chaque PR déclenche automatiquement :
 
 ## 📏 Mesurer en live
 
-```bash
-# Mesurer le baseline (gros payload)
-curl -s -w '\nsize=%{size_download} time=%{time_total}\n' -o /dev/null http://localhost:8080/books
-
-# Mesurer l'optimisé (paginé + filtré + gzip)
-curl -s -H 'Accept-Encoding: gzip' -w '\nsize=%{size_download} time=%{time_total}\n' \
-  -o /dev/null "http://localhost:8081/books/select?fields=id,title,author&page=0&size=20"
-
-# Vérifier le 304 avec ETag
-ETAG=$(curl -sI http://localhost:8081/books/1 | grep -i etag | awk '{print $2}' | tr -d '\r')
-curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" http://localhost:8081/books/1
-```
 
 ## 📚 Liens utiles
 
@@ -150,6 +138,21 @@ curl -s -o /dev/null -w 'http_code=%{http_code}\n' -H "If-None-Match: $ETAG" htt
 - [API Green Score — Training](https://github.com/API-Green-Score/training-student)
 - [Spectral — OpenAPI Linter](https://stoplight.io/open-source/spectral)
 - [Devoxx France](https://www.devoxx.fr/)
+
+## 🎓 Aller plus loin — Workshop pratique
+
+Envie de passer de la théorie à la pratique ? Le **[Workshop clé-en-main](WORKSHOP.md)** vous guide pas à pas (30 min) pour appliquer concrètement chaque optimisation sur une API réelle :
+
+- 🔴 Partez d'une API naïve (baseline) et constatez les dégâts (payload massif, temps de réponse élevé)
+- 🟢 Appliquez les bonnes pratiques une par une (pagination, compression, cache, delta, CBOR…)
+- 📊 Mesurez l'impact réel de chaque optimisation avec le Green Score Analyzer
+- ⚡ Traduisez les gains en **consommation d'énergie** et **émissions CO₂**
+
+> 💡 Ce workshop est conçu pour aller plus loin dans la pratique et vous permettre de reproduire l'intégralité de la démarche sur vos propres APIs. Idéal en autonomie, en équipe ou en session de live-coding.
+
+👉 **[Démarrer le Workshop →](WORKSHOP.md)**
+
+---
 
 ## 📝 Documents de l'atelier
 

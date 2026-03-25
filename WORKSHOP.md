@@ -21,11 +21,29 @@ Java 17+, Maven 3.9+, `curl`, Python 3 (pour l'analyseur).
 
 ## Démarrage
 
-```bash
-# Option rapide (tout-en-un)
-bash scripts/run-demo.sh
+> ⚠️ **Choisissez UNE SEULE des deux options ci-dessous.** Elles sont **exclusives** : utilisez soit le script automatique, soit le lancement manuel.
 
-# OU manuellement :
+---
+
+### 🅰️ Option 1 — Script automatique (recommandé)
+
+Tout est lancé en une seule commande : build, démarrage des 2 APIs, mesures et analyse.
+
+```bash
+bash scripts/run-demo.sh
+```
+
+---
+
+### ────────────── OU ──────────────
+
+---
+
+### 🅱️ Option 2 — Lancement manuel (3 terminaux)
+
+Pour garder la main sur chaque étape et explorer à votre rythme.
+
+```bash
 # Terminal 1 — Baseline (port 8080)
 cd green-api-baseline && mvn spring-boot:run
 
@@ -33,8 +51,10 @@ cd green-api-baseline && mvn spring-boot:run
 cd green-api-optimized && mvn spring-boot:run
 
 # Terminal 3 — Mesures
-cd scripts && bash measure_all.sh
+cd scripts && bash scripts/run-demo_light.sh
 ```
+
+---
 
 ## Live-coding : points clés
 

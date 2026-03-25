@@ -24,7 +24,7 @@ echo "Optimized PID: $OPT_PID"
 
 if $ANALYZE; then
   echo "Running Green Score analyzer..."
-  bash "$ROOT/scripts/green-score-analyzer.sh" || true
+  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
 fi
 
 echo "Press Ctrl+C to stop."
