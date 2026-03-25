@@ -229,18 +229,35 @@ echo -e "${YELLOW}━━━ 🌿 GREEN SCORE Calculation ━━━${NC}"
 #   - US07 Rate limiting:    5 pts (rate limit filter present)
 #   - AR02 Format (CBOR):   10 pts (binary format)
 
+ENV_B_FULL="$B_FULL" \
+ENV_O_PAGE="$O_PAGE" \
+ENV_O_FIELDS="$O_FIELDS" \
+ENV_O_GZIP="$O_GZIP" \
+ENV_O_ETAG_304="$O_ETAG_304" \
+ENV_O_DELTA="$O_DELTA" \
+ENV_O_RANGE="$O_RANGE" \
+ENV_O_CBOR="$O_CBOR" \
+ENV_O_FULL="$O_FULL" \
+ENV_B_ONE="$B_ONE" \
+ENV_B_ONE2="$B_ONE2" \
+ENV_O_ETAG_FIRST="$O_ETAG_FIRST" \
+ENV_TIMESTAMP="$TIMESTAMP" \
 python3 -c "
-import json, sys
+import json, sys, os
 
-baseline_full = $B_FULL
-opt_page = $O_PAGE
-opt_fields = $O_FIELDS
-opt_gzip = $O_GZIP
-opt_etag = $O_ETAG_304
-opt_delta = $O_DELTA
-opt_range = $O_RANGE
-opt_cbor = $O_CBOR
-opt_full = $O_FULL
+baseline_full = json.loads(os.environ['ENV_B_FULL'])
+opt_page = json.loads(os.environ['ENV_O_PAGE'])
+opt_fields = json.loads(os.environ['ENV_O_FIELDS'])
+opt_gzip = json.loads(os.environ['ENV_O_GZIP'])
+opt_etag = json.loads(os.environ['ENV_O_ETAG_304'])
+opt_delta = json.loads(os.environ['ENV_O_DELTA'])
+opt_range = json.loads(os.environ['ENV_O_RANGE'])
+opt_cbor = json.loads(os.environ['ENV_O_CBOR'])
+opt_full = json.loads(os.environ['ENV_O_FULL'])
+b_one = json.loads(os.environ['ENV_B_ONE'])
+b_one2 = json.loads(os.environ['ENV_B_ONE2'])
+o_etag_first = json.loads(os.environ['ENV_O_ETAG_FIRST'])
+timestamp = os.environ['ENV_TIMESTAMP']
 
 scores = {}
 details = {}
@@ -300,13 +317,13 @@ else:
 
 # DE06 - Delta (10 pts)
 od = opt_delta['size_download']
-of_full = opt_full['size_download']  # Comparer au full du MÊME dataset
+of_full = opt_full['size_download']
 if od >= 0 and opt_delta['http_code'] == 200:
     if of_full > 0 and od < of_full * 0.1:
         scores['DE06_delta'] = 10
         details['DE06_delta'] = {'delta_bytes': od, 'full_bytes': of_full, 'reduction_pct': round((1 - od/of_full)*100, 1) if of_full > 0 else 0, 'note': 'delta endpoint active — excellent reduction'}
     elif od == 0:
-        scores['DE06_delta'] = 10  # empty delta = perfect
+        scores['DE06_delta'] = 10
         details['DE06_delta'] = {'delta_bytes': 0, 'note': 'no changes — empty delta'}
     elif of_full > 0 and od < of_full:
         scores['DE06_delta'] = 6
@@ -331,7 +348,7 @@ else:
     scores['range_206'] = 0
     details['range_206'] = {'note': 'not measured'}
 
-# LO01 - Observability (5 pts) — assumed present if optimized is running
+# LO01 - Observability (5 pts)
 if opt_full['http_code'] > 0:
     scores['LO01_observability'] = 5
     details['LO01_observability'] = {'note': 'PayloadLoggingFilter detected'}
@@ -349,7 +366,7 @@ else:
 
 # AR02 - Binary format CBOR (10 pts)
 oc = opt_cbor['size_download']
-of_full = opt_full['size_download']  # Comparer au JSON full du MÊME dataset
+of_full = opt_full['size_download']
 if oc > 0 and of_full > 0 and oc < of_full:
     ratio = 1 - (oc / of_full)
     scores['AR02_format_cbor'] = min(10, round(ratio * 10 + 5, 1))
@@ -365,7 +382,7 @@ total = sum(scores.values())
 grade = 'A+' if total >= 90 else 'A' if total >= 80 else 'B' if total >= 65 else 'C' if total >= 50 else 'D' if total >= 30 else 'E'
 
 report = {
-    'timestamp': '$TIMESTAMP',
+    'timestamp': timestamp,
     'green_score': {
         'total': total,
         'max': 100,
@@ -376,14 +393,14 @@ report = {
     'measurements': {
         'baseline': {
             'full_payload': baseline_full,
-            'single_resource': $B_ONE,
-            'single_repeat': $B_ONE2
+            'single_resource': b_one,
+            'single_repeat': b_one2
         },
         'optimized': {
             'pagination': opt_page,
             'fields_filter': opt_fields,
             'gzip_compression': opt_gzip,
-            'etag_first_call': $O_ETAG_FIRST,
+            'etag_first_call': o_etag_first,
             'etag_304': opt_etag,
             'delta_changes': opt_delta,
             'range_206': opt_range,

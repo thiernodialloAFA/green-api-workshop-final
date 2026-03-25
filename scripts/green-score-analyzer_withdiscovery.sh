@@ -555,32 +555,55 @@ echo ""
 ###############################################################################
 echo -e "${YELLOW}━━━ 🌿 GREEN SCORE Calculation ━━━${NC}"
 
+ENV_B_FULL="$B_FULL" \
+ENV_O_PAGE="$O_PAGE" \
+ENV_O_FIELDS="$O_FIELDS" \
+ENV_O_GZIP="$O_GZIP" \
+ENV_O_ETAG_304="$O_ETAG_304" \
+ENV_O_DELTA="$O_DELTA" \
+ENV_O_RANGE="$O_RANGE" \
+ENV_O_CBOR="$O_CBOR" \
+ENV_O_FULL="$O_FULL" \
+ENV_B_ONE="$B_ONE" \
+ENV_B_ONE2="$B_ONE2" \
+ENV_O_ETAG_FIRST="$O_ETAG_FIRST" \
+ENV_DISCOVERED_ENDPOINTS="$DISCOVERED_ENDPOINTS" \
+ENV_B_DISC_MEASUREMENTS="$B_DISC_MEASUREMENTS" \
+ENV_O_DISC_MEASUREMENTS="$O_DISC_MEASUREMENTS" \
+ENV_SPECTRAL_OUT="$SPECTRAL_OUT" \
+ENV_TIMESTAMP="$TIMESTAMP" \
+ENV_OPTIMIZED="$OPTIMIZED" \
+ENV_SWAGGER_URL="$SWAGGER_URL" \
 python3 -c "
-import json, sys
+import json, sys, os
 
-baseline_full = $B_FULL
-opt_page = $O_PAGE
-opt_fields = $O_FIELDS
-opt_gzip = $O_GZIP
-opt_etag = $O_ETAG_304
-opt_delta = $O_DELTA
-opt_range = $O_RANGE
-opt_cbor = $O_CBOR
-opt_full = $O_FULL
-discovered_eps = $DISCOVERED_ENDPOINTS
-b_disc = json.loads('''$B_DISC_MEASUREMENTS''')
-o_disc = json.loads('''$O_DISC_MEASUREMENTS''')
+baseline_full = json.loads(os.environ['ENV_B_FULL'])
+opt_page = json.loads(os.environ['ENV_O_PAGE'])
+opt_fields = json.loads(os.environ['ENV_O_FIELDS'])
+opt_gzip = json.loads(os.environ['ENV_O_GZIP'])
+opt_etag = json.loads(os.environ['ENV_O_ETAG_304'])
+opt_delta = json.loads(os.environ['ENV_O_DELTA'])
+opt_range = json.loads(os.environ['ENV_O_RANGE'])
+opt_cbor = json.loads(os.environ['ENV_O_CBOR'])
+opt_full = json.loads(os.environ['ENV_O_FULL'])
+b_one = json.loads(os.environ['ENV_B_ONE'])
+b_one2 = json.loads(os.environ['ENV_B_ONE2'])
+o_etag_first = json.loads(os.environ['ENV_O_ETAG_FIRST'])
+discovered_eps = json.loads(os.environ['ENV_DISCOVERED_ENDPOINTS'])
+b_disc = json.loads(os.environ['ENV_B_DISC_MEASUREMENTS'])
+o_disc = json.loads(os.environ['ENV_O_DISC_MEASUREMENTS'])
+spectral_file = os.environ['ENV_SPECTRAL_OUT']
+timestamp = os.environ['ENV_TIMESTAMP']
+optimized_url = os.environ['ENV_OPTIMIZED']
+swagger_url = os.environ['ENV_SWAGGER_URL']
 
-# Load spectral results
 try:
-    spectral_issues = json.load(open('$SPECTRAL_OUT', 'r'))
+    spectral_issues = json.load(open(spectral_file, 'r'))
 except Exception:
     spectral_issues = []
 
 scores = {}
 details = {}
-
-# === Green Score (same logic as original) ===
 
 bf = baseline_full['size_download']
 op = opt_page['size_download']
@@ -674,7 +697,6 @@ else:
 total = sum(scores.values())
 grade = 'A+' if total >= 90 else 'A' if total >= 80 else 'B' if total >= 65 else 'C' if total >= 50 else 'D' if total >= 30 else 'E'
 
-# === Build discovered_endpoints for dynamic dashboard ===
 disc_list = []
 for ep in discovered_eps:
     if ep['method'] != 'GET':
@@ -695,7 +717,7 @@ for ep in discovered_eps:
         })
 
 report = {
-    'timestamp': '$TIMESTAMP',
+    'timestamp': timestamp,
     'green_score': {
         'total': total,
         'max': 100,
@@ -706,14 +728,14 @@ report = {
     'measurements': {
         'baseline': {
             'full_payload': baseline_full,
-            'single_resource': $B_ONE,
-            'single_repeat': $B_ONE2
+            'single_resource': b_one,
+            'single_repeat': b_one2
         },
         'optimized': {
             'pagination': opt_page,
             'fields_filter': opt_fields,
             'gzip_compression': opt_gzip,
-            'etag_first_call': $O_ETAG_FIRST,
+            'etag_first_call': o_etag_first,
             'etag_304': opt_etag,
             'delta_changes': opt_delta,
             'range_206': opt_range,
@@ -722,8 +744,8 @@ report = {
         }
     },
     'auto_discovery': {
-        'base_url': '$OPTIMIZED',
-        'swagger_url': '$SWAGGER_URL',
+        'base_url': optimized_url,
+        'swagger_url': swagger_url,
         'endpoints_discovered': len(discovered_eps),
         'endpoints_measured': len(o_disc) + len(b_disc),
         'all_measurements': {**b_disc, **o_disc},
