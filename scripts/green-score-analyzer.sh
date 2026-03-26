@@ -433,8 +433,8 @@ echo -e "${GREEN}📄 Latest report:   ${LATEST_LINK}${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 # Quick summary
-TOTAL=$(python3 -c "import json;r=json.load(open('$REPORT_FILE'));print(r['green_score']['total'])")
-GRADE=$(python3 -c "import json;r=json.load(open('$REPORT_FILE'));print(r['green_score']['grade'])")
+TOTAL=$(python3 -c "import sys,json;r=json.load(sys.stdin);print(r['green_score']['total'])" < "$REPORT_FILE")
+GRADE=$(python3 -c "import sys,json;r=json.load(sys.stdin);print(r['green_score']['grade'])" < "$REPORT_FILE")
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"

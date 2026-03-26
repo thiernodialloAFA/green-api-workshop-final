@@ -68,8 +68,9 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
+> podman compose up --build
 > # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
 > ```
 
 > **🪟 Windows (PowerShell)**
@@ -95,7 +96,7 @@ green-api-workshop-devoxx/
 > cd green-api-optimized && mvn spring-boot:run
 >
 > # Terminal 3 — Analyse automatisée
-> cd scripts && bash green-score-analyzer.sh
+> cd scripts && bash green-score-analyzer_withdiscovery.sh
 > ```
 
 > **🪟 Windows (PowerShell): sur 3 terminaux en //**
@@ -120,15 +121,16 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
-> docker-compose up --build
+> podman compose up --build &
 > # → Baseline:  http://localhost:8080
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
+> bash scripts/green-score-analyzer_withdiscovery.sh
 > ```
 
 > **🪟 Windows (PowerShell)**
 > ```powershell
-> docker-compose up --build
+> podman compose up --build
 > # → Baseline:  http://localhost:8080
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
@@ -200,7 +202,7 @@ Chaque PR déclenche automatiquement :
 - Maven 3.9+
 - `curl`
 - Python 3 (pour le script d'analyse)
-- Docker & Docker Compose (optionnel)
+- Podman & Podman Compose (optionnel)
 - Node.js (optionnel, pour Spectral)
 
 ## 📄 Licence

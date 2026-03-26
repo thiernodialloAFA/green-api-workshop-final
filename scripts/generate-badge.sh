@@ -13,8 +13,8 @@ if [ ! -f "$REPORT_FILE" ]; then
   exit 1
 fi
 
-SCORE=$(python3 -c "import json;print(json.load(open('$REPORT_FILE'))['green_score']['total'])")
-GRADE=$(python3 -c "import json;print(json.load(open('$REPORT_FILE'))['green_score']['grade'])")
+SCORE=$(python3 -c "import sys,json;print(int(round(json.load(sys.stdin)['green_score']['total'])))" < "$REPORT_FILE")
+GRADE=$(python3 -c "import sys,json;print(json.load(sys.stdin)['green_score']['grade'])" < "$REPORT_FILE")
 
 # Color mapping by score
 if [ "$SCORE" -ge 90 ]; then COLOR="#16a34a";

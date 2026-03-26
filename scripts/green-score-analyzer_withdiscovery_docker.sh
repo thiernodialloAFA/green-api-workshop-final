@@ -162,7 +162,7 @@ if [ "$DISCOVERY_OK" = true ] && [ -s "$SPEC_FILE" ]; then
   DISCOVERED_ENDPOINTS=$(python3 -c "
 import json, sys
 
-spec = json.load(open('$SPEC_FILE', 'r'))
+spec = json.load(sys.stdin)
 base_path = ''
 if spec.get('swagger') == '2.0':
     base_path = spec.get('basePath', '')
@@ -185,7 +185,7 @@ for path, ops in (spec.get('paths') or {}).items():
         })
 
 print(json.dumps(endpoints))
-" 2>/dev/null || echo "[]")
+" < "$SPEC_FILE" 2>/dev/null || echo "[]")
 
   EP_COUNT=$(echo "$DISCOVERED_ENDPOINTS" | python3 -c "import sys,json;print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
   echo -e "  ${GREEN}✓ Discovered $EP_COUNT endpoint(s)${NC}"
@@ -439,10 +439,10 @@ if [ "$DISCOVERY_OK" = true ] && [ -s "$SPEC_FILE" ]; then
   # Fallback: Python-based linting of green rules against spec
   if [ "$SPECTRAL_OK" = false ]; then
     echo -e "  ${YELLOW}Spectral CLI not available — using Python-based green rule linting${NC}"
-    python3 -c "
-import json, sys
+    ENV_SPEC_FILE="$SPEC_FILE" ENV_SPECTRAL_OUT="$SPECTRAL_OUT" python3 -c "
+import json, sys, os
 
-spec = json.load(open('$SPEC_FILE', 'r'))
+spec = json.load(open(os.environ['ENV_SPEC_FILE'], 'r'))
 issues = []
 
 def add_issue(code, path, severity, message, rule_id=''):
@@ -452,7 +452,7 @@ def add_issue(code, path, severity, message, rule_id=''):
         'severity': severity,  # 0=error, 1=warn, 2=info, 3=hint
         'message': message,
         'rule': rule_id,
-        'source': '$SPEC_FILE'
+        'source': os.environ['ENV_SPEC_FILE']
     })
 
 paths = spec.get('paths') or {}
@@ -519,17 +519,17 @@ if not has_binary:
 
 # Sort by severity
 issues.sort(key=lambda x: x['severity'])
-json.dump(issues, open('$SPECTRAL_OUT', 'w'), indent=2)
+json.dump(issues, open(os.environ['ENV_SPECTRAL_OUT'], 'w'), indent=2)
 print(json.dumps({'count': len(issues), 'errors': sum(1 for i in issues if i['severity']==0), 'warnings': sum(1 for i in issues if i['severity']==1), 'infos': sum(1 for i in issues if i['severity']>=2)}))
 " 2>/dev/null && SPECTRAL_OK=true || true
   fi
 
   if [ "$SPECTRAL_OK" = true ] && [ -f "$SPECTRAL_OUT" ]; then
-    ISSUE_COUNT=$(python3 -c "import json;d=json.load(open('$SPECTRAL_OUT'));print(len(d))" 2>/dev/null || echo "0")
+    ISSUE_COUNT=$(python3 -c "import sys,json;d=json.load(sys.stdin);print(len(d))" < "$SPECTRAL_OUT" 2>/dev/null || echo "0")
     echo -e "  ${GREEN}✓ Spectral/Lint: ${ISSUE_COUNT} issue(s) found${NC}"
     python3 -c "
-import json
-issues = json.load(open('$SPECTRAL_OUT'))
+import json, sys
+issues = json.load(sys.stdin)
 sev_map = {0: '❌ error', 1: '⚠️  warn', 2: 'ℹ️  info', 3: '💡 hint'}
 for i in issues[:20]:
     sev = sev_map.get(i.get('severity', 3), '?')
@@ -538,7 +538,7 @@ for i in issues[:20]:
     print(f'    {sev}  [{code}] {msg}')
 if len(issues) > 20:
     print(f'    ... et {len(issues)-20} autres')
-" 2>/dev/null || true
+" < "$SPECTRAL_OUT" 2>/dev/null || true
   else
     echo -e "  ${YELLOW}⚠ No lint results produced${NC}"
     echo "[]" > "$SPECTRAL_OUT"
@@ -782,9 +782,9 @@ echo -e "${GREEN}📄 Report saved to: ${REPORT_FILE}${NC}"
 echo -e "${GREEN}📄 Latest report:   ${LATEST_LINK}${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-TOTAL=$(python3 -c "import json;r=json.load(open('$REPORT_FILE'));print(r['green_score']['total'])")
-GRADE=$(python3 -c "import json;r=json.load(open('$REPORT_FILE'));print(r['green_score']['grade'])")
-EP_DISC=$(python3 -c "import json;r=json.load(open('$REPORT_FILE'));print(r.get('auto_discovery',{}).get('endpoints_discovered',0))")
+TOTAL=$(python3 -c "import sys,json;r=json.load(sys.stdin);print(r['green_score']['total'])" < "$REPORT_FILE")
+GRADE=$(python3 -c "import sys,json;r=json.load(sys.stdin);print(r['green_score']['grade'])" < "$REPORT_FILE")
+EP_DISC=$(python3 -c "import sys,json;r=json.load(sys.stdin);print(r.get('auto_discovery',{}).get('endpoints_discovered',0))" < "$REPORT_FILE")
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"

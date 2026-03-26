@@ -6,6 +6,8 @@
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+#podman compose up --build &
+
 ANALYZE=false
 if [[ "${1:-}" == "--analyze" ]]; then
   ANALYZE=true
@@ -54,10 +56,8 @@ if ! $BASE_READY || ! $OPT_READY; then
 fi
 echo ""
 
-if $ANALYZE; then
-  echo "Running Green Score analyzer..."
-  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
-fi
+echo "Running Green Score analyzer..."
+bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
 
 echo "Press Ctrl+C to stop."
 trap - EXIT    # désactive le cleanup auto, on attend manuellement

@@ -105,7 +105,7 @@ if [ -n "$SWAGGER_FOUND" ]; then
   DISCOVERED_PATHS=$(python3 -c "
 import json, re, sys
 
-spec = json.load(open('$SPEC_FILE', 'r'))
+spec = json.load(sys.stdin)
 base_path = spec.get('basePath', '') if spec.get('swagger') == '2.0' else ''
 
 for path, ops in (spec.get('paths') or {}).items():
@@ -115,7 +115,7 @@ for path, ops in (spec.get('paths') or {}).items():
             url_path = re.sub(r'\{[^}]+\}', '1', full)
             summary = (ops[method].get('summary') or ops[method].get('operationId') or '')[:60]
             print(f'{method.upper()}|{full}|{url_path}|{summary}')
-" 2>/dev/null || echo "")
+" < "$SPEC_FILE" 2>/dev/null || echo "")
 
   EP_COUNT=$(echo "$DISCOVERED_PATHS" | grep -c '|' || echo "0")
   echo -e "  ${GREEN}✓ Discovered ${EP_COUNT} GET endpoint(s):${NC}"
