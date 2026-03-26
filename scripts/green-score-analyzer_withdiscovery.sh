@@ -51,11 +51,11 @@ measure() {
   local auth_header=""
   if [ -n "$BEARER_TOKEN" ]; then
     auth_header="-H"
-    extra_args=("$auth_header" "Authorization: Bearer $BEARER_TOKEN" "${extra_args[@]}")
+    extra_args=("$auth_header" "Authorization: Bearer $BEARER_TOKEN" ${extra_args[@]+"${extra_args[@]}"})
   fi
 
   local result
-  result=$(curl -s -o /dev/null -w '{"http_code":%{http_code},"size_download":%{size_download},"time_total":%{time_total},"speed_download":%{speed_download}}' "${extra_args[@]}" "$url" 2>/dev/null || echo '{"http_code":0,"size_download":0,"time_total":0,"speed_download":0}')
+  result=$(curl -s -o /dev/null -w '{"http_code":%{http_code},"size_download":%{size_download},"time_total":%{time_total},"speed_download":%{speed_download}}' ${extra_args[@]+"${extra_args[@]}"} "$url" 2>/dev/null || echo '{"http_code":0,"size_download":0,"time_total":0,"speed_download":0}')
 
   echo "$result"
 }

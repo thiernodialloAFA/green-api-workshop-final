@@ -6,7 +6,8 @@
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-podman compose up --build &
+podman compose down --remove-orphans 2>/dev/null || true
+podman compose up --build --force-recreate &
 
 echo "⏳ Attente du démarrage des services 20s..."
 sleep 20
