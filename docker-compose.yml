@@ -45,8 +45,9 @@ services:
     ports:
       - "3000:80"
     volumes:
-      - ./dashboard:/usr/share/nginx/html:ro
-      - ./reports:/usr/share/nginx/html/reports:ro
+      - ./dashboard:/dashboard
+      - ./dashboard:/usr/share/nginx/html
+      - ./reports:/usr/share/nginx/html/reports
     depends_on:
       - baseline
       - optimized
@@ -55,20 +56,22 @@ services:
 
   # ── Analyzer (one-shot, generates report) ────────────────
   analyzer:
-    image: curlimages/curl:latest
+    image: bash:devel-alpine3.23 #curlimages/curl:latest
     depends_on:
       baseline:
         condition: service_healthy
       optimized:
         condition: service_healthy
     volumes:
-      - ./scripts:/scripts:ro
+      - ./dashboard:/dashboard
+      - ./scripts:/scripts
       - ./reports:/reports
+      - ./badges:/badges
     entrypoint: ["sh", "-c"]
     command:
       - |
         apk add --no-cache bash python3 coreutils > /dev/null 2>&1
-        BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash /scripts/green-score-analyzer.sh
+        BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash /scripts/green-score-analyzer_withdiscovery_docker.sh
     environment:
       - BASELINE_PORT=8080
       - OPTIMIZED_PORT=8081
@@ -77,21 +80,22 @@ services:
 
   # ── Analyzer WITH DISCOVERY (one-shot, swagger-driven) ──
   analyzer-discovery:
-    image: curlimages/curl:latest
+    image: bash:devel-alpine3.23 #curlimages/curl:latest
     depends_on:
       baseline:
         condition: service_healthy
       optimized:
         condition: service_healthy
     volumes:
-      - ./scripts:/scripts:ro
+      - ./dashboard:/dashboard
+      - ./scripts:/scripts
       - ./reports:/reports
-      - ./.spectral.yml:/.spectral.yml:ro
+      - ./.spectral.yml:/.spectral.yml
     entrypoint: ["sh", "-c"]
     command:
       - |
         apk add --no-cache bash python3 coreutils > /dev/null 2>&1
-        BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash /scripts/green-score-analyzer_withdiscovery.sh
+        BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash /scripts/green-score-analyzer_withdiscovery_docker.sh
     environment:
       - BASELINE_PORT=8080
       - OPTIMIZED_PORT=8081
@@ -104,6 +108,8 @@ services:
   auto-discover:
     image: python:3.12-slim
     depends_on:
+      baseline:
+        condition: service_healthy
       optimized:
         condition: service_healthy
     volumes:
