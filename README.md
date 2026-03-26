@@ -68,7 +68,6 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
-> podman compose up --build
 > # Dataset plus gros pour accentuer le contraste avant/après
 > DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
 > ```
@@ -99,18 +98,6 @@ green-api-workshop-devoxx/
 > cd scripts && bash green-score-analyzer_withdiscovery.sh
 > ```
 
-> **🪟 Windows (PowerShell): sur 3 terminaux en //**
-> ```powershell
-> # Terminal 1 — Baseline (API naïve, port 8080)
-> cd green-api-baseline ; mvn spring-boot:run
->
-> # Terminal 2 — Optimized (API green, port 8081)
-> cd green-api-optimized ; mvn spring-boot:run
->
-> # Terminal 3 — Analyse automatisée
-> cd scripts ; .\green-score-analyzer.ps1
-> ```
-
 ---
 
 ### ──────────────────── OU ────────────────────
@@ -126,33 +113,6 @@ green-api-workshop-devoxx/
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
 > bash scripts/green-score-analyzer_withdiscovery.sh
-> ```
-
-> **🪟 Windows (PowerShell)**
-> ```powershell
-> podman compose up --build
-> # → Baseline:  http://localhost:8080
-> # → Optimized: http://localhost:8081
-> # → Dashboard: http://localhost:3000
-> ```
-
----
-
-### ──────────────────── OU ────────────────────
-
----
-
-### 🅳 Option 3 : Script de démo (présentation live)
-
-> **🐧 Linux / macOS**
-> ```bash
-> DATASET_SIZE=1000000 bash scripts/run-demo_light.sh
-> ```
-
-> **🪟 Windows (PowerShell)**
-> ```powershell
-> $env:DATASET_SIZE=1000000
-> .\scripts\run-demo_light.ps1
 > ```
 
 ## 📊 Dashboard

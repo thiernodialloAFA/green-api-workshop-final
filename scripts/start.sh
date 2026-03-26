@@ -6,31 +6,15 @@
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+podman compose up --build &
+
+echo "⏳ Attente du démarrage des services 20s..."
+sleep 20
+
 ANALYZE=false
 if [[ "${1:-}" == "--analyze" ]]; then
   ANALYZE=true
 fi
-
-# ── Nettoyage des ports au cas où un ancien processus traîne ──
-cleanup() {
-  echo ""
-  echo "🧹 Arrêt des services..."
-  kill "$BASE_PID" "$OPT_PID" 2>/dev/null || true
-  wait "$BASE_PID" "$OPT_PID" 2>/dev/null || true
-  echo "Terminé."
-}
-trap cleanup EXIT INT TERM
-
-echo "Starting baseline (8080)..."
-(cd "$ROOT/green-api-baseline" && mvn -q spring-boot:run) &
-BASE_PID=$!
-
-echo "Starting optimized (8081)..."
-(cd "$ROOT/green-api-optimized" && mvn -q spring-boot:run) &
-OPT_PID=$!
-
-echo "Baseline PID: $BASE_PID"
-echo "Optimized PID: $OPT_PID"
 
 # --- Attente du démarrage des 2 services (max 30s) ---
 echo ""
@@ -42,14 +26,6 @@ OPT_READY=false
 
 while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
   # Vérifier que les processus tournent encore
-  if ! kill -0 "$BASE_PID" 2>/dev/null && ! $BASE_READY; then
-    echo "  ❌ Baseline (8080) — processus terminé prématurément"
-    break
-  fi
-  if ! kill -0 "$OPT_PID" 2>/dev/null && ! $OPT_READY; then
-    echo "  ❌ Optimized (8081) — processus terminé prématurément"
-    break
-  fi
 
   if ! $BASE_READY; then
     if curl -sf http://localhost:8080/actuator/health >/dev/null 2>&1; then
@@ -83,12 +59,9 @@ if ! $BASE_READY || ! $OPT_READY; then
 fi
 echo ""
 
-if $ANALYZE; then
-  echo "Running Green Score analyzer..."
-  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
-fi
+echo "Running Green Score analyzer..."
+bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
 
 echo "Press Ctrl+C to stop."
 trap - EXIT    # désactive le cleanup auto, on attend manuellement
 wait
-

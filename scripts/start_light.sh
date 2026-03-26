@@ -6,7 +6,10 @@
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-#podman compose up --build &
+podman compose up --build &
+
+echo "⏳ Attente du démarrage des services 20s..."
+sleep 20
 
 ANALYZE=false
 if [[ "${1:-}" == "--analyze" ]]; then
