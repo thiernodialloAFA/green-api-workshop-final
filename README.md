@@ -68,16 +68,11 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
+> podman compose down --remove-orphans 2>/dev/null || true
+> podman compose up --build --force-recreate &
 > # Dataset plus gros pour accentuer le contraste avant/après
 > DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
 > ```
-
-> **🪟 Windows (PowerShell)**
-> ```powershell
-> $env:DATASET_SIZE=1000000
-> .\scripts\start.ps1 -Analyze
-> ```
-
 ---
 
 ### ──────────────────── OU ────────────────────
@@ -162,7 +157,7 @@ Chaque PR déclenche automatiquement :
 - Maven 3.9+
 - `curl`
 - Python 3 (pour le script d'analyse)
-- Podman & Podman Compose (optionnel)
+- Docker ou Podman & Docker/Podman Compose (optionnel) (en fonction il faudra adapter les commandes de démarrage du compose)
 - Node.js (optionnel, pour Spectral)
 
 ## 📄 Licence
