@@ -68,8 +68,30 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
+> # Dataset plus gros pour accentuer le contraste avant/après
+> DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+> ```
+---
+
+### ──────────────────── OU ────────────────────
+
+---
+🅰️ Option 0-bis : Script start (Podman Compose 2 terminaux séparés)
+> **🐧 Linux / macOS**
+> ```bash
 > podman compose down --remove-orphans 2>/dev/null || true
 > podman compose up --build --force-recreate &
+> # Dataset plus gros pour accentuer le contraste avant/après
+> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
+> ```
+
+### ──────────────────── OU ────────────────────
+
+🅰️ Option 0-ter : Script start (Docker Compose 2 terminaux séparés)
+> **🐧 Linux / macOS**
+> ```bash
+> docker compose down --remove-orphans 2>/dev/null || true
+> docker compose up --build --force-recreate &
 > # Dataset plus gros pour accentuer le contraste avant/après
 > DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
 > ```
@@ -78,7 +100,6 @@ green-api-workshop-devoxx/
 ### ──────────────────── OU ────────────────────
 
 ---
-
 ### 🅱️ Option 1 : Maven (local)
 
 > **🐧 Linux / macOS: sur 3 terminaux en //**
@@ -99,11 +120,22 @@ green-api-workshop-devoxx/
 
 ---
 
-### 🅲 Option 2 : Docker Compose
+### 🅲 Option 2 : Docker Compose (2 terminaux séparés)
 
 > **🐧 Linux / macOS**
 > ```bash
-> podman compose up --build &
+> docker compose up --build 
+> # → Baseline:  http://localhost:8080
+> # → Optimized: http://localhost:8081
+> # → Dashboard: http://localhost:3000
+> bash scripts/green-score-analyzer_withdiscovery.sh
+> ```
+
+### 🅲 Option 2-bis : Podman Compose (2 terminaux separés)
+
+> **🐧 Linux / macOS**
+> ```bash
+> podman compose up --build 
 > # → Baseline:  http://localhost:8080
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
@@ -112,7 +144,7 @@ green-api-workshop-devoxx/
 
 ## 📊 Dashboard
 
-Ouvrez `dashboard/index.html` dans votre navigateur pour visualiser :
+Ouvrez  `http://localhost:3000` dans votre navigateur pour visualiser : (ou en fallback, ouvrez `dashboard/index.html` directement)
 
 - 🌿 **Green Score /100** avec grade (A+ → E)
 - 📋 **Détail par règle** API Green Score
@@ -131,6 +163,10 @@ Chaque PR déclenche automatiquement :
 2. **Green Score Analysis** — démarre les 2 APIs, exécute l'analyseur, vérifie les assertions
 3. **Spectral Lint** — valide l'OpenAPI spec contre les règles Green API
 4. **Commentaire PR** — poste le score détaillé directement sur la PR
+
+- `.github/workflows/pr-green-api.yml` : build, analyse, assertions, commentaire PR
+- `.spectral.yml` : règles OpenAPI éco-conception
+- Le score est posté automatiquement sur chaque PR
 
 ## 📏 Mesurer en live
 
@@ -165,5 +201,4 @@ Chaque PR déclenche automatiquement :
 MIT — Libre d'utilisation, de modification et de redistribution.
 ## Useful Documents
 - [Green API Checklist (PR)](CHECKLIST.md)
-- Workshop slides: `docs/slides/Green-API-Workshop.pptx`
 - [Turnkey workshop guide](WORKSHOP.md)

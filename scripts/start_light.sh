@@ -7,12 +7,12 @@ set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 #podman compose down --remove-orphans 2>/dev/null || true
-podman compose down --remove-orphans 2>/dev/null || true
-if [[ "$(uname -s)" == Darwin ]]; then
-  osascript -e "tell application \"Terminal\" to do script \"cd '$ROOT' && podman compose up --build --force-recreate\""
-else
-  mintty --title "Podman Compose" -e bash -c "cd '$ROOT' && podman compose up --build --force-recreate; read -p 'Appuyez sur Entrée pour fermer...'" &
-fi
+#podman compose down --remove-orphans 2>/dev/null || true
+#if [[ "$(uname -s)" == Darwin ]]; then
+ # osascript -e "tell application \"Terminal\" to do script \"cd '$ROOT' && podman compose up --build --force-recreate\""
+#else
+ # mintty --title "Podman Compose" -e bash -c "cd '$ROOT' && podman compose up --build --force-recreate; read -p 'Appuyez sur Entrée pour fermer...'" &
+#fi
 
 echo "⏳ Attente du démarrage des services 20s..."
 sleep 20

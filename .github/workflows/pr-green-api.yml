@@ -76,7 +76,8 @@ jobs:
       - name: Run Green Score Analyzer
         run: |
           chmod +x scripts/green-score-analyzer.sh
-          BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash scripts/green-score-analyzer.sh
+          chmod +x scripts/green-score-analyzer_withdiscovery.sh
+          BASELINE_PORT=8080 OPTIMIZED_PORT=8081 bash scripts/green-score-analyzer_withdiscovery.sh
 
       - name: Generate Green Score badge
         run: |
