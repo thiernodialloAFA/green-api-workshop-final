@@ -54,24 +54,28 @@ dashboard:  ## Regenerate dashboard from latest report
 		--template $(TEMPLATE) \
 		--output $(DASHBOARD)
 
-# ── Docker ─────────────────────────────────────────────────
+# ── Détection automatique container runtime (docker ou podman) ──
+CONTAINER_RT := $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
+CONTAINER_COMPOSE := $(CONTAINER_RT) compose
+
+# ── Container ──────────────────────────────────────────────
 .PHONY: up
 up:  ## Start all services (baseline + optimized + dashboard)
-	docker compose up -d baseline optimized dashboard
+	$(CONTAINER_COMPOSE) up -d baseline optimized dashboard
 
 .PHONY: up-analyze
 up-analyze:  ## Start services + run analyzer
-	docker compose up -d baseline optimized dashboard
-	docker compose run --rm analyzer
+	$(CONTAINER_COMPOSE) up -d baseline optimized dashboard
+	$(CONTAINER_COMPOSE) run --rm analyzer
 
 .PHONY: up-auto
 up-auto:  ## Start services + run auto-discover
-	docker compose up -d optimized
-	docker compose --profile auto-discover run --rm auto-discover
+	$(CONTAINER_COMPOSE) up -d optimized
+	$(CONTAINER_COMPOSE) --profile auto-discover run --rm auto-discover
 
 .PHONY: down
 down:  ## Stop all services
-	docker compose down
+	$(CONTAINER_COMPOSE) down
 
 # ── Spectral lint only ─────────────────────────────────────
 .PHONY: lint

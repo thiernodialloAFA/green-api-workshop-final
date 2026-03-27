@@ -47,15 +47,24 @@ measure() {
   local label="$1"
   local url="$2"
   shift 2
-  local extra_args=("$@")
+  local extra_args=()
+  if [ $# -gt 0 ]; then extra_args=("$@"); fi
   local auth_header=""
   if [ -n "$BEARER_TOKEN" ]; then
     auth_header="-H"
-    extra_args=("$auth_header" "Authorization: Bearer $BEARER_TOKEN" ${extra_args[@]+"${extra_args[@]}"})
+    local new_args=("$auth_header" "Authorization: Bearer $BEARER_TOKEN")
+    if [ ${#extra_args[@]} -gt 0 ]; then
+      new_args+=("${extra_args[@]}")
+    fi
+    extra_args=("${new_args[@]}")
   fi
 
   local result
-  result=$(curl -s -o /dev/null -w '{"http_code":%{http_code},"size_download":%{size_download},"time_total":%{time_total},"speed_download":%{speed_download}}' ${extra_args[@]+"${extra_args[@]}"} "$url" 2>/dev/null || echo '{"http_code":0,"size_download":0,"time_total":0,"speed_download":0}')
+  if [ ${#extra_args[@]} -gt 0 ]; then
+    result=$(curl -s -o /dev/null -w '{"http_code":%{http_code},"size_download":%{size_download},"time_total":%{time_total},"speed_download":%{speed_download}}' "${extra_args[@]}" "$url" 2>/dev/null || echo '{"http_code":0,"size_download":0,"time_total":0,"speed_download":0}')
+  else
+    result=$(curl -s -o /dev/null -w '{"http_code":%{http_code},"size_download":%{size_download},"time_total":%{time_total},"speed_download":%{speed_download}}' "$url" 2>/dev/null || echo '{"http_code":0,"size_download":0,"time_total":0,"speed_download":0}')
+  fi
 
   echo "$result"
 }

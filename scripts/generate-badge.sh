@@ -13,10 +13,12 @@ if [ ! -f "$REPORT_FILE" ]; then
   exit 1
 fi
 
-SCORE=$(python3 -c "import sys,json;print(int(round(json.load(sys.stdin)['green_score']['total'])))" < "$REPORT_FILE")
+SCORE_RAW=$(python3 -c "import sys,json;print(json.load(sys.stdin)['green_score']['total'])" < "$REPORT_FILE")
+# Ensure SCORE is always an integer (strip decimals if python outputs float)
+SCORE=$(printf '%.0f' "$SCORE_RAW")
 GRADE=$(python3 -c "import sys,json;print(json.load(sys.stdin)['green_score']['grade'])" < "$REPORT_FILE")
 
-# Color mapping by score
+# Color mapping by score (SCORE is guaranteed integer)
 if [ "$SCORE" -ge 90 ]; then COLOR="#16a34a";
 elif [ "$SCORE" -ge 80 ]; then COLOR="#22c55e";
 elif [ "$SCORE" -ge 65 ]; then COLOR="#eab308";

@@ -6,11 +6,25 @@
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-podman compose down --remove-orphans 2>/dev/null || true
+# Détection automatique : docker ou podman ?
+source "$ROOT/scripts/_container-runtime.sh"
+
+# Suppress Podman "Executing external compose provider" warning (ignoré si docker)
+export PODMAN_COMPOSE_WARNING_LOGS=false
+
+# Force kill + remove all existing containers
+$CONTAINER_COMPOSE down --remove-orphans --timeout 5 2>/dev/null || true
+$CONTAINER_RT rm -f $($CONTAINER_RT ps -aq) 2>/dev/null || true
+
+echo "⏳ Attente de 15s pour laisser les ports se libérer..."
+sleep 15
+
 if [[ "$(uname -s)" == Darwin ]]; then
-  osascript -e "tell application \"Terminal\" to do script \"cd '$ROOT' && docker compose up --build --force-recreate\""
+  # macOS : ouvrir un nouveau Terminal.app via osascript
+  osascript -e "tell application \"Terminal\" to do script \"cd '$ROOT' && $CONTAINER_COMPOSE up --build --force-recreate \""
 else
-  mintty --title "Podman Compose" -e bash -c "cd '$ROOT' && podman compose up --build --force-recreate; read -p 'Appuyez sur Entrée pour fermer...'" &
+  # Windows (Git Bash / mintty) : ouvrir un nouveau terminal mintty
+  mintty --title "Container Compose" -e bash -c "cd '$ROOT' && $CONTAINER_COMPOSE up --build --force-recreate; read -p 'Appuyez sur Entrée pour fermer...'" &
 fi
 
 echo "⏳ Attente du démarrage des services 20s..."
