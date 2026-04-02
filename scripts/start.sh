@@ -18,6 +18,7 @@ $CONTAINER_RT rm -f $($CONTAINER_RT ps -aq) 2>/dev/null || true
 
 echo "⏳ Attente de 15s pour laisser les ports se libérer..."
 sleep 15
+echo "⏳ Attention nous allons ouvrir un terminal à coté pour lancer le compose, ne fermez pas ce terminal sauf à la fin en faisant Ctrl + C!"
 
 if [[ "$(uname -s)" == Darwin ]]; then
   # macOS : ouvrir un nouveau Terminal.app via osascript

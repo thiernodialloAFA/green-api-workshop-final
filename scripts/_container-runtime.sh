@@ -15,7 +15,7 @@ detect_container_runtime() {
     CONTAINER_RT="docker"
   else
     echo "❌ Aucun container runtime trouvé (ni docker ni podman)." >&2
-    echo "   Installez Docker Desktop ou Podman Desktop et réessayez." >&2
+    echo "   Installez Manager de container comme (Docker, Podman, Rancher Desktop ... ou votre manager de container preferé),  et réessayez." >&2
     exit 1
   fi
 

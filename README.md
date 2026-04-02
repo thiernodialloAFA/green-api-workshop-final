@@ -64,6 +64,17 @@ green-api-workshop-devoxx/
 
 ---
 
+
+## 🏗️ Pré-requis
+
+- Java 17+
+- Maven 3.9+
+- `curl`
+- Python 3 (pour le script d'analyse)
+- Docker ou Podman & Docker/Podman Compose (optionnel) (en fonction il faudra adapter les commandes de démarrage du compose)
+- Node.js (optionnel, pour Spectral)
+
+
 ### 🅰️ Option 0 : Script start (local)
 
 > **🐧 Linux / macOS**
@@ -79,22 +90,16 @@ green-api-workshop-devoxx/
 🅰️ Option 0-bis : Script start (Podman Compose 2 terminaux séparés)
 > **🐧 Linux / macOS**
 > ```bash
+> # Terminal 1 — Démarrage des services (API + Dashboard)
 > podman compose down --remove-orphans 2>/dev/null || true
-> podman compose up --build --force-recreate &
+> podman compose up --build --force-recreate
+> 
+> # Terminal 2 — Analyse automatisée
 > # Dataset plus gros pour accentuer le contraste avant/après
 > DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
 > ```
-
-### ──────────────────── OU ────────────────────
-
-🅰️ Option 0-ter : Script start (Docker Compose 2 terminaux séparés)
-> **🐧 Linux / macOS**
-> ```bash
-> docker compose down --remove-orphans 2>/dev/null || true
-> docker compose up --build --force-recreate &
-> # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
-> ```
+> 
+> **A la fin pour nettoyer les ressources, depuis un terminal utilisez : la commande `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
 ---
 
 ### ──────────────────── OU ────────────────────
@@ -106,12 +111,15 @@ green-api-workshop-devoxx/
 > ```bash
 > # Terminal 1 — Baseline (API naïve, port 8080)
 > cd green-api-baseline && mvn spring-boot:run
+> 
+> **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l'API à la fin.**
 >
 > # Terminal 2 — Optimized (API green, port 8081)
 > cd green-api-optimized && mvn spring-boot:run
 >
+> **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l'API à la fin.**
 > # Terminal 3 — Analyse automatisée
-> cd scripts && bash green-score-analyzer_withdiscovery.sh
+> bash ./scripts/green-score-analyzer_withdiscovery.sh
 > ```
 
 ---
@@ -124,23 +132,33 @@ green-api-workshop-devoxx/
 
 > **🐧 Linux / macOS**
 > ```bash
+> # Terminal 1 — Démarrage des services (API + Dashboard)
 > docker compose up --build 
 > # → Baseline:  http://localhost:8080
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
+> 
+> # Terminal 2 — Analyse automatisée
 > bash scripts/green-score-analyzer_withdiscovery.sh
 > ```
+> **NB: A la fin pour nettoyer les ressources, depuis terminal 1 utilisez : la commande  `ctrl + c` et ensuite une des commandes suivantes `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
 
 ### 🅲 Option 2-bis : Podman Compose (2 terminaux separés)
 
 > **🐧 Linux / macOS**
 > ```bash
+> # Terminal 1 — Démarrage des services (API + Dashboard)
+> podman compose down --remove-orphans 2>/dev/null || true
 > podman compose up --build 
 > # → Baseline:  http://localhost:8080
 > # → Optimized: http://localhost:8081
 > # → Dashboard: http://localhost:3000
+> 
+> # Terminal 2 — Analyse automatisée
 > bash scripts/green-score-analyzer_withdiscovery.sh
 > ```
+> 
+> **NB: A la fin pour nettoyer les ressources, depuis terminal 1 utilisez : la commande  `ctrl + c` et ensuite une des commandes suivantes `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
 
 ## 📊 Dashboard
 
@@ -155,7 +173,7 @@ Ouvrez  `http://localhost:3000` dans votre navigateur pour visualiser : (ou en f
 
 Le dashboard charge automatiquement `reports/latest-report.json` ou permet de charger manuellement un rapport.
 
-## 🤖 Automatisation CI
+## 🤖 Automatisation CI: vous avez un exemple de github action dans ce repo qui montre comment automatiser l'analyse du Green Score ./.github/workflows/pr-green-api.yml
 
 Chaque PR déclenche automatiquement :
 
@@ -186,15 +204,6 @@ Chaque PR déclenche automatiquement :
 - [Mapping pratiques → règles](MAPPING.md)
 - [Exercices avancés](ADVANCED.md)
 - Slides : `docs/slides/`
-
-## 🏗️ Pré-requis
-
-- Java 17+
-- Maven 3.9+
-- `curl`
-- Python 3 (pour le script d'analyse)
-- Docker ou Podman & Docker/Podman Compose (optionnel) (en fonction il faudra adapter les commandes de démarrage du compose)
-- Node.js (optionnel, pour Spectral)
 
 ## 📄 Licence
 
