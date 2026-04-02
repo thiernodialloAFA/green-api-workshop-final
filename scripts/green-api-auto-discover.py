@@ -827,6 +827,17 @@ Examples:
     log(f"Report: {report_file}", "OK")
     log(f"Latest: {latest_file}", "OK")
 
+    # Purge old reports: keep only the 5 most recent (+ latest-report.json)
+    log("🧹 Purge des anciens rapports (conservation des 5 derniers)...", "INFO")
+    all_reports = sorted(
+        output_dir.glob("green-score-report-*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    for old_report in all_reports[5:]:
+        log(f"  🗑️  Suppression : {old_report.name}", "INFO")
+        old_report.unlink(missing_ok=True)
+
     # Analysis summary
     summary = {
         "timestamp": timestamp_str,

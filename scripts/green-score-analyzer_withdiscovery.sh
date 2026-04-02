@@ -775,6 +775,13 @@ print(json.dumps(report, indent=2))
 # Create/update the latest
 cp "$REPORT_FILE" "$LATEST_LINK"
 
+# Purge old reports: keep only the 5 most recent (+ latest-report.json)
+echo -e "${YELLOW}🧹 Purge des anciens rapports (conservation des 5 derniers)...${NC}"
+ls -1t "$OUTPUT_DIR"/green-score-report-*.json 2>/dev/null | tail -n +6 | while read -r old_report; do
+  echo "  🗑️  Suppression : $(basename "$old_report")"
+  rm -f "$old_report"
+done
+
 # Generate badge
 if [ -f "$ROOT_DIR/scripts/generate-badge.sh" ]; then
   bash "$ROOT_DIR/scripts/generate-badge.sh" "$LATEST_LINK" "$ROOT_DIR/badges/green-score.svg" || true

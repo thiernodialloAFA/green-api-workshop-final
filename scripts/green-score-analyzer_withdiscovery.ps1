@@ -522,6 +522,16 @@ $json = $report | ConvertTo-Json -Depth 6
 $json | Out-File -FilePath $ReportFile -Encoding utf8
 $json | Out-File -FilePath $LatestLink -Encoding utf8
 
+# Purge old reports: keep only the 5 most recent (+ latest-report.json)
+Write-Host "🧹 Purge des anciens rapports (conservation des 5 derniers)..." -ForegroundColor Yellow
+$allReports = Get-ChildItem -Path $ReportDir -Filter "green-score-report-*.json" | Sort-Object LastWriteTime -Descending
+if ($allReports.Count -gt 5) {
+    $allReports | Select-Object -Skip 5 | ForEach-Object {
+        Write-Host "  🗑️  Suppression : $($_.Name)"
+        Remove-Item $_.FullName -Force
+    }
+}
+
 # Generate badge
 $badgeScript = Join-Path $RootDir "scripts\generate-badge.ps1"
 if (Test-Path $badgeScript) {

@@ -421,6 +421,13 @@ print(json.dumps(report, indent=2))
 # Create/update the latest symlink
 cp "$REPORT_FILE" "$LATEST_LINK"
 
+# Purge old reports: keep only the 5 most recent (+ latest-report.json)
+echo -e "${YELLOW}🧹 Purge des anciens rapports (conservation des 5 derniers)...${NC}"
+ls -1t "$OUTPUT_DIR"/green-score-report-*.json 2>/dev/null | tail -n +6 | while read -r old_report; do
+  echo "  🗑️  Suppression : $(basename "$old_report")"
+  rm -f "$old_report"
+done
+
 # Generate badge (non-blocking)
 if [ -f "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-badge.sh" ]; then
   bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/generate-badge.sh" "$LATEST_LINK" "$(cd "$(dirname "$0")/.." && pwd)/badges/green-score.svg" || true
