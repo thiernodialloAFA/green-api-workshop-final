@@ -112,12 +112,12 @@ green-api-workshop-devoxx/
 > # Terminal 1 — Baseline (API naïve, port 8080)
 > cd green-api-baseline && mvn spring-boot:run
 > 
-> **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l'API à la fin.**
+> **NB: Il faudra faire un Ctrl+C dans ce terminal pour arrêter l API à la fin.**
 >
 > # Terminal 2 — Optimized (API green, port 8081)
 > cd green-api-optimized && mvn spring-boot:run
 >
-> **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l'API à la fin.**
+> **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l API à la fin.**
 > # Terminal 3 — Analyse automatisée
 > bash ./scripts/green-score-analyzer_withdiscovery.sh
 > ```
