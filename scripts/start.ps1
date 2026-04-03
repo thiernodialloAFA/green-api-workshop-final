@@ -4,7 +4,8 @@
   Usage: .\scripts\start.ps1 [-Analyze]
 ##>
 param(
-  [switch]$Analyze
+  [switch]$Analyze,
+  [switch]$Debug
 )
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -17,7 +18,9 @@ Start-Process -FilePath "mvn" -ArgumentList "-q", "spring-boot:run" -WorkingDire
 
 if ($Analyze) {
   Write-Host "Running Green Score analyzer..."
-  & (Join-Path $Root "scripts\green-score-analyzer.ps1")
+  $analyzerArgs = @{}
+  if ($Debug) { $analyzerArgs["Debug"] = $true }
+  & (Join-Path $Root "scripts\green-score-analyzer.ps1") @analyzerArgs
 }
 
 Write-Host "Baseline:  http://localhost:8080"

@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 ###############################################################################
 #  Start baseline + optimized (local dev)
-#  Usage: bash scripts/start.sh [--analyze]
+#  Usage: bash scripts/start.sh [--analyze] [--debug]
 ###############################################################################
 set -uo pipefail   # pas de -e : on gère les erreurs manuellement
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Parse options
+DEBUG_FLAG=""
+for arg in "$@"; do
+  case "$arg" in
+    --debug) DEBUG_FLAG="--debug" ;;
+  esac
+done
 
 # Détection automatique : docker ou podman ?
 source "$ROOT/scripts/_container-runtime.sh"
@@ -32,7 +40,7 @@ echo "⏳ Attente du démarrage des services 20s..."
 sleep 20
 
 ANALYZE=false
-if [[ "${1:-}" == "--analyze" ]]; then
+if [[ "${1:-}" == "--analyze" ]] || [[ "${2:-}" == "--analyze" ]]; then
   ANALYZE=true
 fi
 
@@ -80,7 +88,7 @@ fi
 echo ""
 
 echo "Running Green Score analyzer..."
-bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" || true
+bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" $DEBUG_FLAG || true
 
 echo "Press Ctrl+C to stop."
 trap - EXIT    # désactive le cleanup auto, on attend manuellement

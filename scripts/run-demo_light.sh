@@ -7,6 +7,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATASET_SIZE=${DATASET_SIZE:-1000000}
 
+# Parse options
+DEBUG_FLAG=""
+for arg in "$@"; do
+  case "$arg" in
+    --debug) DEBUG_FLAG="--debug" ;;
+  esac
+done
+
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -204,9 +212,9 @@ echo ""
 ###############################################################################
 echo -e "${YELLOW}━━━ STEP 6/7 : Analyse Green Score automatisée (with discovery) ━━━${NC}"
 if [ -f "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" ]; then
-  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh"
+  bash "$ROOT/scripts/green-score-analyzer_withdiscovery.sh" $DEBUG_FLAG
 else
-  bash "$ROOT/scripts/green-score-analyzer.sh"
+  bash "$ROOT/scripts/green-score-analyzer.sh" $DEBUG_FLAG
 fi
 echo ""
 

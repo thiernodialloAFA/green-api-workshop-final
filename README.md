@@ -81,6 +81,8 @@ green-api-workshop-devoxx/
 > ```bash
 > # Dataset plus gros pour accentuer le contraste avant/après
 > DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+> # Avec affichage du rapport JSON complet (debug) :
+> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --debug
 > ```
 ---
 
@@ -120,6 +122,8 @@ green-api-workshop-devoxx/
 > **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l API à la fin.**
 > # Terminal 3 — Analyse automatisée
 > bash ./scripts/green-score-analyzer_withdiscovery.sh
+> # Avec affichage du rapport JSON complet (debug) :
+> bash ./scripts/green-score-analyzer_withdiscovery.sh --debug
 > ```
 
 ---
