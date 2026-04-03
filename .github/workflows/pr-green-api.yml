@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pr-green-api-${{ github.ref }}
@@ -84,6 +86,11 @@ jobs:
           chmod +x scripts/generate-badge.sh
           bash scripts/generate-badge.sh reports/latest-report.json badges/green-score.svg || true
 
+      - name: Generate Dashboard (HTML + Markdown)
+        run: |
+          chmod +x scripts/generate-dashboard.sh
+          bash scripts/generate-dashboard.sh reports/latest-report.json dashboard/index.save.html dashboard/index.html || true
+
       - name: Assertions — payload & 304 & Green Score
         shell: bash
         run: |
@@ -144,6 +151,15 @@ jobs:
         with:
           name: green-score-badge
           path: badges/
+
+      - name: Upload dashboard
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: green-score-dashboard
+          path: |
+            dashboard/index.html
+            dashboard/index.md
 
       - name: Comment PR with Green Score
         if: github.event_name == 'pull_request'
@@ -281,7 +297,7 @@ jobs:
   deploy-pages:
     name: "🌐 Deploy Dashboard to GitHub Pages"
     needs: green-score
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'feat/devoxx'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
