@@ -769,7 +769,7 @@ report = {
     },
 }
 
-json.dumps(report, indent=2)
+print(json.dumps(report, indent=2))
 " | tee "$REPORT_FILE"
 
 # Create/update the latest

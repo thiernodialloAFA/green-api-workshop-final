@@ -25,11 +25,15 @@ def main() -> int:
     if not report_path.is_file():
         print(f"Report not found: {report_path}", file=sys.stderr)
         return 1
+    report_text = report_path.read_text(encoding="utf-8").strip()
+    if not report_text:
+        print(f"Report file is empty: {report_path}", file=sys.stderr)
+        return 1
     if not template_path.is_file():
         print(f"Template not found: {template_path}", file=sys.stderr)
         return 1
 
-    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report = json.loads(report_text)
     template = template_path.read_text(encoding="utf-8")
 
     if PLACEHOLDER not in template:

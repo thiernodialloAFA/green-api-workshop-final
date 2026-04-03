@@ -89,6 +89,21 @@ jobs:
         run: |
           set -e
           REPORT="reports/latest-report.json"
+
+          # Vérifier que le rapport existe et n'est pas vide
+          if [ ! -f "$REPORT" ]; then
+            echo "❌ ERROR: Report file not found: $REPORT"
+            echo "Listing reports/ directory:"
+            ls -la reports/ || true
+            exit 1
+          fi
+          if [ ! -s "$REPORT" ]; then
+            echo "❌ ERROR: Report file is empty: $REPORT"
+            echo "The analyzer script may have failed silently."
+            echo "Check the analyzer logs above for errors."
+            exit 1
+          fi
+
           echo "=== Green Score Report ==="
           python3 -m json.tool "$REPORT"
 
