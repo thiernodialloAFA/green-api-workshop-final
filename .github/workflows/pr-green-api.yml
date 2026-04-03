@@ -278,3 +278,50 @@ jobs:
         if: always()
         run: kill $(cat optimized.pid) 2>/dev/null || true
 
+  deploy-pages:
+    name: "🌐 Deploy Dashboard to GitHub Pages"
+    needs: green-score
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'feat/devoxx'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download dashboard artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: green-score-dashboard
+          path: dashboard/
+
+      - name: Download badge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: green-score-badge
+          path: badges/
+
+      - name: Download report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: green-score-report
+          path: reports/
+
+      - name: Prepare Pages content
+        run: |
+          mkdir -p _site
+          cp -r dashboard/* _site/
+          cp -r badges _site/badges
+          cp -r reports _site/reports
+          # .nojekyll ensures GitHub Pages serves HTML files as-is
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
