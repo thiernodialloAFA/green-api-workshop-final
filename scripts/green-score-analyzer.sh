@@ -2,8 +2,17 @@
 ###############################################################################
 #  Green Score Analyzer — mesure avant/après et calcul du Green Score
 #  Usage : bash green-score-analyzer.sh [--baseline-port 8080] [--optimized-port 8081]
+#          bash green-score-analyzer.sh --debug
 ###############################################################################
 set -euo pipefail
+
+# Parse --debug option
+DEBUG_MODE=false
+for arg in "$@"; do
+  case "$arg" in
+    --debug) DEBUG_MODE=true ;;
+  esac
+done
 
 BASELINE_PORT=${BASELINE_PORT:-8080}
 OPTIMIZED_PORT=${OPTIMIZED_PORT:-8081}
@@ -416,7 +425,12 @@ report = {
 }
 
 print(json.dumps(report, indent=2))
-" | tee "$REPORT_FILE"
+" > "$REPORT_FILE"
+
+if [ "$DEBUG_MODE" = true ]; then
+  echo -e "${YELLOW}━━━ 🐛 DEBUG: Full JSON report ━━━${NC}"
+  cat "$REPORT_FILE"
+fi
 
 # Create/update the latest symlink
 cp "$REPORT_FILE" "$LATEST_LINK"

@@ -14,7 +14,8 @@ param(
     [int]$OptimizedPort = 8081,
     [string]$SwaggerUrl = "",
     [string]$BearerToken = "",
-    [int]$Repeat = 3
+    [int]$Repeat = 3,
+    [switch]$Debug
 )
 
 $ErrorActionPreference = "Continue"
@@ -544,7 +545,10 @@ if (Test-Path $dashboardScript) {
     & $dashboardScript $LatestLink "dashboard\index.save.html" "dashboard\index.html" | Out-Null
 }
 
-$json | Write-Host
+if ($Debug) {
+    Write-Host "--- DEBUG: Full JSON report ---" -ForegroundColor Yellow
+    $json | Write-Host
+}
 
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Cyan
