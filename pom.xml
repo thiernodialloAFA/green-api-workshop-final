@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example</groupId>
+  <artifactId>green-api-workshop</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Green API Workshop</name>
+  <description>Parent reactor POM — builds all workshop modules at once</description>
+
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <spring.boot.version>3.5.6</spring.boot.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Sonar / Creedengo — single project key for all modules -->
+    <sonar.projectKey>green-api-workshop</sonar.projectKey>
+    <sonar.projectName>Green API Workshop</sonar.projectName>
+    <sonar.java.source>${java.version}</sonar.java.source>
+    <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+  </properties>
+
+  <modules>
+    <module>green-api-baseline</module>
+    <module>green-api-baseline-db</module>
+    <module>green-api-optimized</module>
+  </modules>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>4.0.0.4121</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
+

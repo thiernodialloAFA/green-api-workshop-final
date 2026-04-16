@@ -304,6 +304,99 @@ Alternative (Protobuf):
 ```
 </details>
 
+
+---
+
+## 🌱 Creedengo Éco-Design : **88/100** — Grade **A** 🟢
+
+> Analyse statique de l'éco-conception du code source via [Creedengo](https://github.com/green-code-initiative) / SonarQube
+
+> ⚠️ **Seules les règles Creedengo/écodesign sont comptabilisées** dans le score et le récapitulatif ci-dessous. Les règles SonarQube générales sont listées séparément.
+
+- **Langages détectés** : java
+- **Principal** : java
+- **Plugins Creedengo** : java
+
+### 📊 Récapitulatif — Règles Creedengo écodesign uniquement
+
+| Sévérité | Nombre |
+|:--------:|-------:|
+| 🔴 **Bloquant** | 0 |
+| 🟠 **Critique** | 0 |
+| 🟡 **Majeur** | 0 |
+| ⚪ **Mineur** | 142 |
+| 🔵 **Info** | 0 |
+| **Total** | **142** |
+
+- **Issues écodesign** : 142
+- **Règles écodesign violées** : 2 / 17 analysées
+- **Formule du score** : (1 − 2/17) × 100 = **88/100**
+- **Effort de remédiation** : 12h20min
+
+- **Lignes de code** : 718
+
+### 🏷️ Catégories éco-design
+
+| Catégorie | Issues | Règles |
+|-----------|-------:|-------:|
+| 🌱 Éco-conception générale | 140 | 1 |
+| 💾 Utilisation mémoire | 2 | 1 |
+
+### 📋 Règles Creedengo violées
+
+| Sévérité | Règle | Issues | Catégorie |
+|:--------:|-------|-------:|-----------|
+| ⚪ MINOR | **GCI82** — Variable can be made constant | 140 | general |
+| ⚪ MINOR | **GCI76** — Avoid usage of static collections. | 2 | memory |
+
+### 📁 Fichiers les plus impactés (écodesign)
+
+| Fichier | Issues |
+|---------|-------:|
+| `api/BookReactiveController.java` | 37 |
+| `api/BookController.java` | 36 |
+| `repo/BookRepository.java` | 19 |
+| `observability/PayloadLoggingFilter.java` | 8 |
+| `api/FieldSelector.java` | 7 |
+| `web/GlobalExceptionHandler.java` | 7 |
+| `domain/Book.java` | 6 |
+| `repo/BookRepository.java` | 5 |
+| `web/ApiError.java` | 5 |
+| `web/RateLimitFilter.java` | 5 |
+| *… et 5 autres* | |
+
+---
+
+### 🔧 Issues SonarQube générales (hors écodesign) — 13 issues
+
+> Ces issues proviennent des règles SonarQube standard (qualité de code, bugs, sécurité). Elles ne sont **pas** comptabilisées dans le score Creedengo.
+
+| Sévérité | Nombre |
+|:--------:|-------:|
+| 🟠 Critique | 2 |
+| 🟡 Majeur | 2 |
+| ⚪ Mineur | 8 |
+| 🔵 Info | 1 |
+| **Total** | **13** |
+
+| Sévérité | Règle | Issues |
+|:--------:|-------|-------:|
+| 🟠 CRITICAL | **S1192** — S1192 | 2 |
+| 🟡 MAJOR | **S107** — S107 | 1 |
+| 🟡 MAJOR | **S108** — S108 | 1 |
+| ⚪ MINOR | **S1170** — S1170 | 2 |
+| ⚪ MINOR | **S1319** — S1319 | 1 |
+| ⚪ MINOR | **S116** — S116 | 1 |
+| ⚪ MINOR | **S117** — S117 | 1 |
+| ⚪ MINOR | **S1612** — S1612 | 1 |
+| ⚪ MINOR | **S1602** — S1602 | 1 |
+| ⚪ MINOR | **S1659** — S1659 | 1 |
+| 🔵 INFO | **S1135** — S1135 | 1 |
+
+- **Effort de remédiation SonarQube** : 1h08min
+
+📅 *2026-04-16T13:24:15Z*
+
 ---
 
 🌿 *API Green Score — [Framework](https://github.com/API-Green-Score/APIGreenScore) | [Training](https://github.com/API-Green-Score/training-student) | 🌱 [Creedengo](https://github.com/green-code-initiative) | Devoxx France 2026*

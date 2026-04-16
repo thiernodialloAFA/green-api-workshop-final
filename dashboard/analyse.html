@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Analyse API — Green API Score</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        :root {
+            --green-50: #f0fdf4; --green-100: #dcfce7; --green-200: #bbf7d0;
+            --green-400: #4ade80; --green-500: #22c55e; --green-600: #16a34a;
+            --green-700: #15803d; --green-800: #166534; --green-900: #14532d;
+            --red-400: #f87171; --red-500: #ef4444;
+            --yellow-400: #facc15; --yellow-500: #eab308;
+            --blue-400: #60a5fa; --blue-500: #3b82f6;
+            --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+            --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+            --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+            --gray-900: #111827;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--green-900) 100%);
+            color: var(--gray-100);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--green-400), var(--green-200));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header .subtitle { color: var(--gray-400); font-size: 1.05rem; }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            max-width: 1200px;
+            margin: 0 auto 20px;
+        }
+        .actions-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 0 auto 16px;
+            max-width: 1200px;
+        }
+        .controls .block {
+            background: rgba(31,41,55,0.85);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius);
+            padding: 14px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+        label { font-size: 0.85rem; color: var(--gray-300); display: block; margin-bottom: 6px; }
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            background: var(--gray-800);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-100);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        textarea { min-height: 64px; resize: vertical; }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-200);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--green-700); border-color: var(--green-500); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: rgba(31,41,55,0.85);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+        .card.compact {
+            padding: 16px;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            color: var(--green-400);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric-item { text-align: center; padding: 12px; background: var(--gray-800); border-radius: 8px; }
+        .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--green-400); }
+        .metric-label { font-size: 0.8rem; color: var(--gray-400); margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        th { text-align: left; color: var(--green-400); padding: 8px 6px; border-bottom: 2px solid var(--gray-600); }
+        td { padding: 8px 6px; border-bottom: 1px solid var(--gray-700); }
+        .status { font-size: 0.85rem; color: var(--gray-300); }
+        .pill {
+            display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
+        }
+        .pill.good { background: var(--green-800); color: var(--green-200); }
+        .pill.bad { background: rgba(239,68,68,0.2); color: var(--red-400); }
+        .pill.warn { background: rgba(234,179,8,0.2); color: var(--yellow-400); }
+        .footer { text-align: center; margin-top: 30px; color: var(--gray-500); font-size: 0.85rem; }
+        .footer a { color: var(--green-400); text-decoration: none; }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .metric-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌿 Analyse API</h1>
+        <div class="subtitle">Analyse des ressources Swagger/OpenAPI et estimation energie</div>
+    </div>
+
+    <div class="actions-bar">
+        <button class="btn" id="load-sample">🧪 Charger sample</button>
+        <button class="btn" id="analyze-btn">▶️ Analyser</button>
+        <button class="btn" id="export-summary">💾 Export resume</button>
+        <button class="btn" id="export-endpoints">📂 Export endpoints</button>
+        <button class="btn" onclick="location.href='index.html'">↩️ Retour dashboard</button>
+    </div>
+
+    <div class="controls">
+        <div class="block">
+            <label for="swagger-url">Swagger/OpenAPI (URL JSON)</label>
+            <input type="text" id="swagger-url" placeholder="https://.../openapi.json">
+        </div>
+        <div class="block">
+            <label for="swagger-file">Swagger/OpenAPI (fichier JSON)</label>
+            <input type="file" id="swagger-file" accept=".json,.yaml,.yml">
+        </div>
+        <div class="block">
+            <label for="service-base">Endpoint base du service</label>
+            <input type="text" id="service-base" placeholder="http://localhost:8080">
+        </div>
+        <div class="block">
+            <label for="param-json">Valeurs de parametres (JSON)</label>
+            <textarea id="param-json" placeholder='{"id": 1, "page": 0, "size": 20}'></textarea>
+        </div>
+        <div class="block">
+            <label for="repeat-count">Repetitions par endpoint</label>
+            <input type="number" id="repeat-count" min="1" max="10" value="1">
+        </div>
+        <div class="block">
+            <label for="energy-network">Reseau (kWh/GB)</label>
+            <input type="number" id="energy-network" min="0" step="0.001" value="0.06">
+        </div>
+        <div class="block">
+            <label for="energy-power">Puissance serveur (W)</label>
+            <input type="number" id="energy-power" min="1" step="1" value="25">
+        </div>
+        <div class="block">
+            <label for="bearer-token">Bearer token (optionnel)</label>
+            <input type="text" id="bearer-token" placeholder="eyJhbGciOi...">
+        </div>
+        <div class="block">
+            <label>Methode HTTP</label>
+            <div class="button-row" style="gap:6px;">
+                <label><input type="checkbox" id="method-get" checked> GET</label>
+                <label><input type="checkbox" id="method-post"> POST</label>
+                <label><input type="checkbox" id="method-put"> PUT</label>
+                <label><input type="checkbox" id="method-delete"> DELETE</label>
+            </div>
+        </div>
+        <div class="block card compact">
+            <h2 style="font-size:1rem;">⚡ Resume energie</h2>
+            <div class="metric-grid" id="energy-grid">
+                <div class="metric-item"><div class="metric-value">—</div><div class="metric-label">Energie totale (Wh)</div></div>
+                <div class="metric-item"><div class="metric-value">—</div><div class="metric-label">Energie reseau (Wh)</div></div>
+                <div class="metric-item"><div class="metric-value">—</div><div class="metric-label">Energie serveur (Wh)</div></div>
+                <div class="metric-item"><div class="metric-value">—</div><div class="metric-label">Gain vs precedent</div></div>
+            </div>
+            <p class="status" style="margin-top:8px;">Modele: energie reseau + energie serveur (estimation ajustable).</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card" style="grid-column:1/-1;">
+            <h2>📐 Analyse des endpoints</h2>
+            <div class="status" id="analysis-status">En attente d'une analyse.</div>
+            <div style="overflow-x:auto;margin-top:12px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>HTTP</th>
+                            <th>Code</th>
+                            <th>Temps (ms)</th>
+                            <th>Taille (bytes)</th>
+                            <th>Energie (Wh)</th>
+                            <th>Delta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysis-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🌿 Green API Score — Analyse locale (CORS requis) — <a href="./ANALYSE.md">Guide</a></p>
+    </div>
+
+<script>
+const STORAGE_KEY_LATEST = 'green-api-analysis-latest';
+const STORAGE_KEY_HISTORY = 'green-api-analysis-history';
+const SAMPLE_SWAGGER_URL = 'sample-swagger.json';
+
+let currentSwagger = null;
+let currentSummary = null;
+
+const analysisBody = document.getElementById('analysis-body');
+const analysisStatus = document.getElementById('analysis-status');
+
+function parseJsonSafe(text) {
+    try { return JSON.parse(text); } catch (err) { return null; }
+}
+
+function parseSpecText(text, sourceLabel) {
+    const parsedJson = parseJsonSafe(text);
+    if (parsedJson) return parsedJson;
+    if (window.jsyaml && typeof window.jsyaml.load === 'function') {
+        try { return window.jsyaml.load(text); } catch (err) { /* fallthrough */ }
+    }
+    throw new Error(`Swagger JSON/YAML invalide (${sourceLabel}).`);
+}
+
+function getSelectedMethods() {
+    const methods = [];
+    if (document.getElementById('method-get').checked) methods.push('get');
+    if (document.getElementById('method-post').checked) methods.push('post');
+    if (document.getElementById('method-put').checked) methods.push('put');
+    if (document.getElementById('method-delete').checked) methods.push('delete');
+    return methods;
+}
+
+function buildParamMap() {
+    const raw = document.getElementById('param-json').value.trim();
+    if (!raw) return {};
+    const parsed = parseJsonSafe(raw);
+    if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Parametres JSON invalides.');
+    }
+    return parsed;
+}
+
+function resolveBaseUrl(spec) {
+    if (document.getElementById('service-base').value.trim()) {
+        return document.getElementById('service-base').value.trim().replace(/\/$/, '');
+    }
+    if (spec && spec.servers && spec.servers.length > 0 && spec.servers[0].url) {
+        return spec.servers[0].url.replace(/\/$/, '');
+    }
+    if (spec && spec.swagger === '2.0') {
+        const scheme = (spec.schemes && spec.schemes[0]) || 'http';
+        const host = spec.host || 'localhost';
+        const basePath = spec.basePath || '';
+        return `${scheme}://${host}${basePath}`.replace(/\/$/, '');
+    }
+    return '';
+}
+
+function extractEndpoints(spec, methods) {
+    const paths = spec.paths || {};
+    const endpoints = [];
+    for (const [path, operations] of Object.entries(paths)) {
+        for (const [method, op] of Object.entries(operations)) {
+            const methodLower = method.toLowerCase();
+            if (!methods.includes(methodLower)) continue;
+            endpoints.push({
+                path,
+                method: methodLower,
+                operationId: op.operationId || `${methodLower}_${path}`,
+                parameters: op.parameters || []
+            });
+        }
+    }
+    return endpoints;
+}
+
+function applyParams(path, params) {
+    return path.replace(/\{([^}]+)}/g, (_, key) => {
+        if (params[key] !== undefined) return encodeURIComponent(params[key]);
+        return '1';
+    });
+}
+
+function appendQuery(url, params, parametersDef) {
+    const requiredQuery = (parametersDef || []).filter(p => p.in === 'query' && p.required).map(p => p.name);
+    const query = new URLSearchParams();
+    for (const key of Object.keys(params)) {
+        if (params[key] === undefined || params[key] === null) continue;
+        query.set(key, params[key]);
+    }
+    for (const rq of requiredQuery) {
+        if (!query.has(rq)) query.set(rq, '1');
+    }
+    const q = query.toString();
+    if (!q) return url;
+    return url.includes('?') ? `${url}&${q}` : `${url}?${q}`;
+}
+
+function buildUrl(base, path, params, parametersDef) {
+    const filled = applyParams(path, params);
+    const baseSafe = base ? base.replace(/\/$/, '') : '';
+    const url = `${baseSafe}${filled.startsWith('/') ? '' : '/'}${filled}`;
+    return appendQuery(url, params, parametersDef);
+}
+
+function bytesToWh(bytes, networkKwhPerGb) {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return gb * networkKwhPerGb * 1000;
+}
+
+function msToWh(ms, powerW) {
+    return (ms / 1000) * (powerW / 3600);
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatEnergy(wh) {
+    if (!isFinite(wh)) return '—';
+    return wh < 1 ? `${wh.toFixed(3)} Wh` : `${wh.toFixed(2)} Wh`;
+}
+
+function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+async function loadSwaggerFromUrl(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Swagger introuvable (${resp.status}).`);
+    const text = await resp.text();
+    return parseSpecText(text, url);
+}
+
+async function loadSwaggerFromFile(file) {
+    const text = await file.text();
+    return parseSpecText(text, file.name || 'fichier');
+}
+
+function getBearerToken() {
+    return document.getElementById('bearer-token').value.trim();
+}
+
+async function measureEndpoint(url, method, repeats) {
+    let totalMs = 0;
+    let totalBytes = 0;
+    let lastStatus = 0;
+    const bearer = getBearerToken();
+    const headers = bearer ? { 'Authorization': `Bearer ${bearer}` } : {};
+
+    for (let i = 0; i < repeats; i++) {
+        const start = performance.now();
+        const response = await fetch(url, { method: method.toUpperCase(), headers });
+        const buffer = await response.arrayBuffer();
+        const end = performance.now();
+        totalMs += (end - start);
+        totalBytes += buffer.byteLength;
+        lastStatus = response.status;
+    }
+
+    return {
+        time_ms: totalMs / repeats,
+        size_bytes: Math.round(totalBytes / repeats),
+        status: lastStatus
+    };
+}
+
+function renderEnergy(summary) {
+    const grid = document.getElementById('energy-grid');
+    if (!summary) return;
+    const total = summary.totals.energy_total_wh || 0;
+    const net = summary.totals.energy_network_wh || 0;
+    const srv = summary.totals.energy_server_wh || 0;
+    const delta = summary.totals.delta_energy_wh || 0;
+    const deltaLabel = delta < 0 ? `-${Math.abs(delta).toFixed(3)} Wh` : `+${delta.toFixed(3)} Wh`;
+    grid.innerHTML = `
+        <div class="metric-item"><div class="metric-value">${formatEnergy(total)}</div><div class="metric-label">Energie totale (Wh)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(net)}</div><div class="metric-label">Energie reseau (Wh)</div></div>
+        <div class="metric-item"><div class="metric-value">${formatEnergy(srv)}</div><div class="metric-label">Energie serveur (Wh)</div></div>
+        <div class="metric-item"><div class="metric-value">${deltaLabel}</div><div class="metric-label">Gain vs precedent</div></div>
+    `;
+}
+
+function renderTable(summary) {
+    analysisBody.innerHTML = '';
+    if (!summary || !summary.endpoints) return;
+    for (const ep of summary.endpoints) {
+        const deltaBytes = ep.delta?.size_bytes || 0;
+        const deltaMs = ep.delta?.time_ms || 0;
+        const deltaEnergy = ep.delta?.energy_wh || 0;
+        const deltaLabel = `${deltaMs >= 0 ? '+' : ''}${deltaMs.toFixed(1)} ms / ${deltaBytes >= 0 ? '+' : ''}${deltaBytes} B / ${deltaEnergy >= 0 ? '+' : ''}${deltaEnergy.toFixed(3)} Wh`;
+        const deltaClass = deltaEnergy <= 0 ? 'good' : 'bad';
+        analysisBody.innerHTML += `
+            <tr>
+                <td>${ep.method.toUpperCase()} ${ep.path}</td>
+                <td>${ep.method.toUpperCase()}</td>
+                <td>${ep.status || '—'}</td>
+                <td>${ep.time_ms.toFixed(1)}</td>
+                <td>${formatBytes(ep.size_bytes)}</td>
+                <td>${formatEnergy(ep.energy_wh)}</td>
+                <td><span class="pill ${deltaClass}">${deltaLabel}</span></td>
+            </tr>
+        `;
+    }
+}
+
+function saveHistory(summary) {
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '[]');
+    history.push({
+        timestamp: summary.timestamp,
+        totals: summary.totals,
+        count: summary.endpoints.length
+    });
+    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(-20)));
+    localStorage.setItem(STORAGE_KEY_LATEST, JSON.stringify(summary));
+}
+
+function getLatestSummary() {
+    const raw = localStorage.getItem(STORAGE_KEY_LATEST);
+    return raw ? JSON.parse(raw) : null;
+}
+
+function buildDelta(current, previous) {
+    if (!previous) return { time_ms: 0, size_bytes: 0, energy_wh: 0 };
+    return {
+        time_ms: current.time_ms - (previous.time_ms || 0),
+        size_bytes: current.size_bytes - (previous.size_bytes || 0),
+        energy_wh: current.energy_wh - (previous.energy_wh || 0)
+    };
+}
+
+function downloadJson(filename, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+async function analyze() {
+    analysisStatus.textContent = 'Chargement du swagger...';
+    analysisStatus.style.color = 'var(--gray-300)';
+
+    const swaggerUrl = document.getElementById('swagger-url').value.trim();
+    const swaggerFile = document.getElementById('swagger-file').files[0];
+    const methods = getSelectedMethods();
+    const params = buildParamMap();
+    const repeats = Math.max(1, parseInt(document.getElementById('repeat-count').value || '1', 10));
+    const baseInput = document.getElementById('service-base').value.trim();
+
+    if (!swaggerUrl && !swaggerFile) {
+        alert('Veuillez fournir un swagger (URL ou fichier).');
+        return;
+    }
+    if (methods.length === 0) {
+        alert('Veuillez selectionner au moins une methode HTTP.');
+        return;
+    }
+    if (!baseInput) {
+        alert('Veuillez renseigner l\'endpoint base du service.');
+        return;
+    }
+
+    try {
+        currentSwagger = swaggerUrl ? await loadSwaggerFromUrl(swaggerUrl) : await loadSwaggerFromFile(swaggerFile);
+    } catch (err) {
+        analysisStatus.textContent = err.message;
+        analysisStatus.style.color = 'var(--red-400)';
+        return;
+    }
+
+    const baseUrl = resolveBaseUrl(currentSwagger);
+    if (!baseUrl) {
+        alert('Endpoint base introuvable. Renseignez-le manuellement.');
+        return;
+    }
+
+    const endpoints = extractEndpoints(currentSwagger, methods);
+    if (endpoints.length === 0) {
+        analysisStatus.textContent = 'Aucun endpoint correspondant.';
+        analysisStatus.style.color = 'var(--yellow-400)';
+        return;
+    }
+
+    analysisStatus.textContent = `Analyse de ${endpoints.length} endpoints...`;
+
+    const networkKwhPerGb = parseFloat(document.getElementById('energy-network').value || '0.06');
+    const powerW = parseFloat(document.getElementById('energy-power').value || '25');
+
+    const previousSummary = getLatestSummary();
+    const previousMap = new Map();
+    if (previousSummary && previousSummary.endpoints) {
+        for (const ep of previousSummary.endpoints) {
+            previousMap.set(`${ep.method}:${ep.path}`, ep);
+        }
+    }
+
+    const results = [];
+    for (const ep of endpoints) {
+        const url = buildUrl(baseUrl, ep.path, params, ep.parameters);
+        try {
+            const measurement = await measureEndpoint(url, ep.method, repeats);
+            const networkWh = bytesToWh(measurement.size_bytes, networkKwhPerGb);
+            const serverWh = msToWh(measurement.time_ms, powerW);
+            const energyWh = networkWh + serverWh;
+            const current = {
+                method: ep.method,
+                path: ep.path,
+                url,
+                status: measurement.status,
+                time_ms: measurement.time_ms,
+                size_bytes: measurement.size_bytes,
+                energy_wh: energyWh,
+                energy_network_wh: networkWh,
+                energy_server_wh: serverWh
+            };
+            const prev = previousMap.get(`${ep.method}:${ep.path}`);
+            current.delta = buildDelta(current, prev);
+            results.push(current);
+        } catch (err) {
+            results.push({
+                method: ep.method,
+                path: ep.path,
+                url,
+                status: 0,
+                time_ms: 0,
+                size_bytes: 0,
+                energy_wh: 0,
+                delta: { time_ms: 0, size_bytes: 0, energy_wh: 0 },
+                error: err.message
+            });
+        }
+        renderTable({ endpoints: results });
+    }
+
+    const totals = results.reduce((acc, item) => {
+        acc.total_time_ms += item.time_ms;
+        acc.total_bytes += item.size_bytes;
+        acc.energy_total_wh += item.energy_wh;
+        acc.energy_network_wh += item.energy_network_wh || 0;
+        acc.energy_server_wh += item.energy_server_wh || 0;
+        acc.delta_energy_wh += item.delta?.energy_wh || 0;
+        return acc;
+    }, {
+        total_time_ms: 0,
+        total_bytes: 0,
+        energy_total_wh: 0,
+        energy_network_wh: 0,
+        energy_server_wh: 0,
+        delta_energy_wh: 0
+    });
+
+    currentSummary = {
+        timestamp: new Date().toISOString(),
+        swagger_source: swaggerUrl || (swaggerFile ? swaggerFile.name : 'local-file'),
+        service_base_url: baseUrl,
+        constants: {
+            network_kwh_per_gb: networkKwhPerGb,
+            server_power_w: powerW,
+            repeats
+        },
+        totals,
+        endpoints: results
+    };
+
+    saveHistory(currentSummary);
+    renderEnergy(currentSummary);
+    renderTable(currentSummary);
+
+    analysisStatus.textContent = `Analyse terminee (${results.length} endpoints).`;
+    analysisStatus.style.color = 'var(--green-400)';
+}
+
+function exportSummary() {
+    if (!currentSummary) { alert('Aucune analyse disponible.'); return; }
+    const stamp = new Date(currentSummary.timestamp).toISOString().replace(/[:.]/g, '').slice(0, 15);
+    downloadJson(`analysis-summary-${stamp}.json`, currentSummary);
+}
+
+function exportEndpoints() {
+    if (!currentSummary) { alert('Aucune analyse disponible.'); return; }
+    const stamp = new Date(currentSummary.timestamp).toISOString().replace(/[:.]/g, '').slice(0, 15);
+    for (const ep of currentSummary.endpoints) {
+        const slug = slugify(`${ep.method}-${ep.path}`);
+        downloadJson(`analysis-endpoint-${slug}-${stamp}.json`, {
+            timestamp: currentSummary.timestamp,
+            service_base_url: currentSummary.service_base_url,
+            swagger_source: currentSummary.swagger_source,
+            constants: currentSummary.constants,
+            endpoint: ep
+        });
+    }
+}
+
+async function loadSample() {
+    try {
+        currentSwagger = await loadSwaggerFromUrl(SAMPLE_SWAGGER_URL);
+        document.getElementById('swagger-url').value = SAMPLE_SWAGGER_URL;
+        if (!document.getElementById('service-base').value.trim()) {
+            document.getElementById('service-base').value = 'http://localhost:8080';
+        }
+        analysisStatus.textContent = 'Sample charge. Lancez l\'analyse.';
+        analysisStatus.style.color = 'var(--blue-400)';
+    } catch (err) {
+        analysisStatus.textContent = err.message;
+        analysisStatus.style.color = 'var(--red-400)';
+    }
+}
+
+// Events
+
+document.getElementById('analyze-btn').addEventListener('click', () => {
+    analyze().catch(err => {
+        analysisStatus.textContent = err.message;
+        analysisStatus.style.color = 'var(--red-400)';
+    });
+});
+
+document.getElementById('export-summary').addEventListener('click', exportSummary);
+
+document.getElementById('export-endpoints').addEventListener('click', exportEndpoints);
+
+document.getElementById('load-sample').addEventListener('click', loadSample);
+
+// Auto-load last summary for energy display
+window.addEventListener('DOMContentLoaded', () => {
+    const latest = getLatestSummary();
+    if (latest) {
+        currentSummary = latest;
+        renderEnergy(latest);
+        renderTable(latest);
+        analysisStatus.textContent = 'Derniere analyse chargee depuis le navigateur.';
+    }
+});
+</script>
+</body>
+</html>
+

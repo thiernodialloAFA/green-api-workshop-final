@@ -80,9 +80,9 @@ green-api-workshop-devoxx/
 > **🐧 Linux / macOS**
 > ```bash
 > # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start.sh --analyze
+> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --appname "mon-api" --creedengo
 > # Avec affichage du rapport JSON complet (debug) :
-> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --debug
+> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --debug --appname "mon-api" --creedengo
 > ```
 ---
 
@@ -98,7 +98,7 @@ green-api-workshop-devoxx/
 > 
 > # Terminal 2 — Analyse automatisée
 > # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze
+> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze --appname "mon-api" --creedengo
 > ```
 > 
 > **A la fin pour nettoyer les ressources, depuis un terminal utilisez : la commande `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
@@ -121,9 +121,9 @@ green-api-workshop-devoxx/
 >
 > **NB: Il faudra faire un `Ctrl+C` dans ce terminal pour arrêter l API à la fin.**
 > # Terminal 3 — Analyse automatisée
-> bash ./scripts/green-score-analyzer_withdiscovery.sh
+> bash ./greenanalyzer/scripts/green-score-analyzer_withdiscovery.sh
 > # Avec affichage du rapport JSON complet (debug) :
-> bash ./scripts/green-score-analyzer_withdiscovery.sh --debug
+> bash ./greenanalyzer/scripts/green-score-analyzer_withdiscovery.sh --debug
 > ```
 
 ---
@@ -143,7 +143,7 @@ green-api-workshop-devoxx/
 > # → Dashboard: http://localhost:3000
 > 
 > # Terminal 2 — Analyse automatisée
-> bash scripts/green-score-analyzer_withdiscovery.sh
+> bash greenanalyzer/scripts/green-score-analyzer_withdiscovery.sh
 > ```
 > **NB: A la fin pour nettoyer les ressources, depuis terminal 1 utilisez : la commande  `ctrl + c` et ensuite une des commandes suivantes `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
 
@@ -159,14 +159,14 @@ green-api-workshop-devoxx/
 > # → Dashboard: http://localhost:3000
 > 
 > # Terminal 2 — Analyse automatisée
-> bash scripts/green-score-analyzer_withdiscovery.sh
+> bash greenanalyzer/scripts/green-score-analyzer_withdiscovery.sh
 > ```
 > 
 > **NB: A la fin pour nettoyer les ressources, depuis terminal 1 utilisez : la commande  `ctrl + c` et ensuite une des commandes suivantes `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
 
 ## 📊 Dashboard
 
-Ouvrez  `http://localhost:3000` dans votre navigateur pour visualiser : (ou en fallback, ouvrez `dashboard/index.html` directement)
+Ouvrez  `http://localhost:3000` dans votre navigateur pour visualiser : (ou en fallback, ouvrez `greenanalyzer/dashboard/index.html` directement)
 
 - 🌿 **Green Score /100** avec grade (A+ → E)
 - 📋 **Détail par règle** API Green Score
@@ -175,7 +175,17 @@ Ouvrez  `http://localhost:3000` dans votre navigateur pour visualiser : (ou en f
 - 📐 **Table de mesures** détaillée par endpoint
 - 📈 **Historique des scores** (tracking dans le temps)
 
-Le dashboard charge automatiquement `reports/latest-report.json` ou permet de charger manuellement un rapport.
+Le dashboard charge automatiquement `greenanalyzer/reports/latest-report.json` ou permet de charger manuellement un rapport.
+
+### 📄 Versions du dashboard
+
+| Format | Fichier | Rendu |
+|--------|---------|-------|
+| **HTML interactif** | [`greenanalyzer/dashboard/index.html`](greenanalyzer/dashboard/index.html) | Ouvrir localement ou via GitHub Pages |
+| **Markdown** | [`greenanalyzer/dashboard/index.md`](greenanalyzer/dashboard/index.md) | Visible directement sur GitHub |
+| **GitHub Pages** | Déployé automatiquement sur `main` | `https://<user>.github.io/<repo>/` |
+
+> Le fichier `index.md` est généré automatiquement à chaque analyse et contient la même information que le dashboard HTML (score, détail, mesures, spectral).
 
 ## 🤖 Automatisation CI: vous avez un exemple de github action dans ce repo qui montre comment automatiser l'analyse du Green Score ./.github/workflows/pr-green-api.yml
 

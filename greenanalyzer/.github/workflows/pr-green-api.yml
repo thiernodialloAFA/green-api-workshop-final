@@ -31,17 +31,13 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-      - name: Build baseline
-        run: mvn -q -DskipTests -f green-api-baseline/pom.xml package
-      - name: Build optimized
-        run: mvn -q -DskipTests -f green-api-optimized/pom.xml package
-      - name: Upload jars
+      - name: Build backend
+        run: mvn -q -DskipTests -f backend/pom.xml package
+      - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
-          name: jars
-          path: |
-            green-api-baseline/target/*.jar
-            green-api-optimized/target/*.jar
+          name: backend-jar
+          path: backend/target/*.jar
 
   green-score:
     name: "🌿 Green Score Analysis"
@@ -58,34 +54,40 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download jars
+      - name: Download jar
         uses: actions/download-artifact@v4
         with:
-          name: jars
-      - name: Start baseline (8080)
+          name: backend-jar
+          path: backend/target/
+      - name: Start backend (H2 in-memory, no Keycloak)
         run: |
-          nohup java -jar green-api-baseline/target/green-api-baseline-0.0.1-SNAPSHOT.jar > baseline.log 2>&1 &
-          echo $! > baseline.pid
-      - name: Start optimized (8081)
+          nohup java -jar backend/target/*.jar \
+            --spring.profiles.active=test \
+            --server.port=8080 \
+            > backend.log 2>&1 &
+          echo $! > backend.pid
+      - name: Wait for backend
         run: |
-          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar > optimized.log 2>&1 &
-          echo $! > optimized.pid
-      - name: Wait for services
-        run: |
-          for i in $(seq 1 60); do
-            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 && \
-               curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1; then
-              echo "✅ Both services are up"; break
+          echo "Waiting for backend to start..."
+          for i in $(seq 1 90); do
+            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1; then
+              echo "✅ Backend is up"
+              break
+            fi
+            if [ $i -eq 90 ]; then
+              echo "❌ Backend failed to start"
+              cat backend.log
+              exit 1
             fi
             sleep 2
           done
       - name: Verify Swagger is exposed
         run: |
           echo "Checking Swagger endpoint..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/v3/api-docs)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v3/api-docs)
           if [ "$STATUS" = "200" ]; then
             echo "✅ Swagger spec available at /api/v3/api-docs"
-            curl -s http://localhost:8081/api/v3/api-docs | python3 -c "
+            curl -s http://localhost:8080/api/v3/api-docs | python3 -c "
           import sys, json
           spec = json.load(sys.stdin)
           paths = list(spec.get('paths', {}).keys())
@@ -106,8 +108,8 @@ jobs:
       - name: Run Green API Auto-Discover Analyzer
         run: |
           python3 greenanalyzer/scripts/green-api-auto-discover.py \
-            --target http://localhost:8081 \
-            --swagger http://localhost:8081/api/v3/api-docs \
+            --target http://localhost:8080 \
+            --swagger http://localhost:8080/api/v3/api-docs \
             --repeat 3 \
             --skip-spectral \
             --output-dir greenanalyzer/reports
@@ -233,15 +235,15 @@ jobs:
       - name: Download jar
         uses: actions/download-artifact@v4
         with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
+          name: backend-jar
+          path: backend/target/
       - name: Compile backend (for sonar binaries)
-        run: mvn -q -DskipTests -f pom.xml compile
+        run: mvn -q -DskipTests -f backend/pom.xml compile
 
       - name: Run Creedengo Analyzer (same script as local)
         env:
           SONAR_PORT: "9100"
-          APPNAME: ${{ github.event.repository.name || 'grenscore-optimized' }}
+          APPNAME: ${{ github.event.repository.name || 'esignpayment' }}
         run: |
           chmod +x greenanalyzer/scripts/creedengo-analyzer.sh greenanalyzer/scripts/_container-runtime.sh
           bash greenanalyzer/scripts/creedengo-analyzer.sh --skip-build --force-cleanup
@@ -315,13 +317,13 @@ jobs:
       - name: Download jar
         uses: actions/download-artifact@v4
         with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
+          name: backend-jar
+          path: backend/target/
       - name: Start backend
         run: |
-          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar \
+          nohup java -jar backend/target/*.jar \
             --spring.profiles.active=test \
-            --server.port=8081 \
+            --server.port=8080 \
             > backend.log 2>&1 &
           echo $! > backend.pid
           for i in $(seq 1 90); do
@@ -362,24 +364,24 @@ jobs:
       - name: Download jar
         uses: actions/download-artifact@v4
         with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
+          name: backend-jar
+          path: backend/target/
       - name: Start backend
         run: |
-          nohup java -jar green-api-optimized/target/*.jar \
+          nohup java -jar backend/target/*.jar \
             --spring.profiles.active=test \
-            --server.port=8081 \
+            --server.port=8080 \
             > backend.log 2>&1 &
           echo $! > backend.pid
           for i in $(seq 1 90); do
-            curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "API ready" && break
+            curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "API ready" && break
             sleep 2
           done
       - name: Run Auto-Discover Analyzer
         run: |
           python3 greenanalyzer/scripts/green-api-auto-discover.py \
-            --target http://localhost:8081 \
-            --swagger http://localhost:8081/api/v3/api-docs \
+            --target http://localhost:8080 \
+            --swagger http://localhost:8080/api/v3/api-docs \
             --repeat 3 \
             --output-dir greenanalyzer/reports
       - name: Upload reports
