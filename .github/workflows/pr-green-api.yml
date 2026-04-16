@@ -99,7 +99,6 @@ jobs:
           "
           else
             echo "❌ Swagger not available (HTTP $STATUS)"
-            cat backend.log | tail -50
             exit 1
           fi
 
@@ -212,7 +211,11 @@ jobs:
 
       - name: Stop backend
         if: always()
-        run: kill $(cat backend.pid) 2>/dev/null || true
+        run: kill $(cat optimized.pid) 2>/dev/null || true
+
+      - name: Stop baseline
+        if: always()
+        run: kill $(cat baseline.pid) 2>/dev/null || true
 
   creedengo:
     name: "🌱 Creedengo Eco-Design Analysis"
@@ -325,11 +328,11 @@ jobs:
             > backend.log 2>&1 &
           echo $! > backend.pid
           for i in $(seq 1 90); do
-            curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1 && echo "Backend up" && break
+            curl -sSf http://localhost:8081/actuator/health >/dev/null 2>&1 && echo "Backend up" && break
             sleep 2
           done
       - name: Fetch OpenAPI spec
-        run: curl -s http://localhost:8080/api/v3/api-docs -o openapi.json
+        run: curl -s http://localhost:8081/api/v3/api-docs -o openapi.json
       - name: Install Spectral
         run: npm install -g @stoplight/spectral-cli
       - name: Run Spectral
