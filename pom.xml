@@ -25,7 +25,6 @@
 
   <modules>
     <module>green-api-baseline</module>
-    <module>green-api-baseline-db</module>
     <module>green-api-optimized</module>
   </modules>
 
