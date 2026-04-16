@@ -82,7 +82,7 @@ jobs:
       - name: Verify Swagger is exposed
         run: |
           echo "Checking Swagger endpoint..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/v3/api-docs)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/v3/api-docs)
           if [ "$STATUS" = "200" ]; then
             echo "✅ Swagger spec available at /v3/api-docs"
             curl -s http://localhost:8081/v3/api-docs | python3 -c "
@@ -207,7 +207,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-logs
-          path: backend.log
+          path: optimized.log
 
       - name: Stop backend
         if: always()
@@ -233,11 +233,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download jar
-        uses: actions/download-artifact@v4
-        with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
       - name: Compile backend (for sonar binaries)
         run: mvn -q -DskipTests -f pom.xml compile
 
@@ -315,14 +310,9 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Download jar
-        uses: actions/download-artifact@v4
-        with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
       - name: Start backend
         run: |
-          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar \
+          nohup cd green-api-optimized && mvn spring-boot:run \
             --spring.profiles.active=test \
             --server.port=8081 \
             > backend.log 2>&1 &
@@ -362,14 +352,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download jar
-        uses: actions/download-artifact@v4
-        with:
-          name: green-api-optimized-0.0.1-SNAPSHOT.jar
-          path: green-api-optimized/target/
       - name: Start backend
         run: |
-          nohup java -jar green-api-optimized/target/*.jar \
+          nohup cd green-api-optimized && mvn spring-boot:run \
             --spring.profiles.active=test \
             --server.port=8081 \
             > backend.log 2>&1 &
