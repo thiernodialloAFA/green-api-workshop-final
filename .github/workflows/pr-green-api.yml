@@ -1,4 +1,4 @@
-name: "🌿 Esign Green API Score CI"
+name: "🌿 Green API Score CI"
 
 on:
   push:
@@ -84,8 +84,8 @@ jobs:
           echo "Checking Swagger endpoint..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/v3/api-docs)
           if [ "$STATUS" = "200" ]; then
-            echo "✅ Swagger spec available at /api/v3/api-docs"
-            curl -s http://localhost:8081/api/v3/api-docs | python3 -c "
+            echo "✅ Swagger spec available at /v3/api-docs"
+            curl -s http://localhost:8081/v3/api-docs | python3 -c "
           import sys, json
           spec = json.load(sys.stdin)
           paths = list(spec.get('paths', {}).keys())
@@ -106,7 +106,7 @@ jobs:
         run: |
           python3 greenanalyzer/scripts/green-api-auto-discover.py \
             --target http://localhost:8081 \
-            --swagger http://localhost:8081/api/v3/api-docs \
+            --swagger http://localhost:8081/v3/api-docs \
             --repeat 3 \
             --skip-spectral \
             --output-dir greenanalyzer/reports
@@ -332,7 +332,7 @@ jobs:
             sleep 2
           done
       - name: Fetch OpenAPI spec
-        run: curl -s http://localhost:8081/api/v3/api-docs -o openapi.json
+        run: curl -s http://localhost:8081/v3/api-docs -o openapi.json
       - name: Install Spectral
         run: npm install -g @stoplight/spectral-cli
       - name: Run Spectral
@@ -382,7 +382,7 @@ jobs:
         run: |
           python3 greenanalyzer/scripts/green-api-auto-discover.py \
             --target http://localhost:8081 \
-            --swagger http://localhost:8081/api/v3/api-docs \
+            --swagger http://localhost:8081/v3/api-docs \
             --repeat 3 \
             --output-dir greenanalyzer/reports
       - name: Upload reports

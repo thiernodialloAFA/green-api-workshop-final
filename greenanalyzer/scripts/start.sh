@@ -201,7 +201,7 @@ if [ "$RUN_CREEDENGO" = true ] && [ -f "$SONAR_CONTAINER_FILE" ]; then
   trap cleanup_sonar EXIT INT TERM
 
   # Attente : 5 minutes (500 secondes) avec countdown
-  WAIT_TOTAL=500
+  WAIT_TOTAL=300
   WAIT_ELAPSED=0
   while [ "$WAIT_ELAPSED" -lt "$WAIT_TOTAL" ]; do
     REMAINING=$(( (WAIT_TOTAL - WAIT_ELAPSED) / 60 ))
