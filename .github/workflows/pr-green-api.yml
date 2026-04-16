@@ -310,9 +310,13 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
       - name: Start backend
         run: |
-          nohup cd green-api-optimized && mvn spring-boot:run \
+          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar \
             --spring.profiles.active=test \
             --server.port=8081 \
             > backend.log 2>&1 &
@@ -352,9 +356,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
       - name: Start backend
         run: |
-          nohup cd green-api-optimized && mvn spring-boot:run \
+          nohup java -jar green-api-optimized/target/green-api-optimized-0.0.1-SNAPSHOT.jar \
             --spring.profiles.active=test \
             --server.port=8081 \
             > backend.log 2>&1 &
