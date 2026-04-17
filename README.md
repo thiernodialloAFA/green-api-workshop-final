@@ -80,9 +80,9 @@ green-api-workshop-devoxx/
 > **🐧 Linux / macOS**
 > ```bash
 > # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --appname "mon-api" --creedengo
+> DATASET_SIZE=1000000 bash greenanalyzer/scripts/start.sh --analyze --appname "mon-api" --creedengo
 > # Avec affichage du rapport JSON complet (debug) :
-> DATASET_SIZE=1000000 bash scripts/start.sh --analyze --debug --appname "mon-api" --creedengo
+> DATASET_SIZE=1000000 bash greenanalyzer/scripts/start.sh --analyze --debug --appname "mon-api" --creedengo
 > ```
 ---
 
@@ -98,7 +98,7 @@ green-api-workshop-devoxx/
 > 
 > # Terminal 2 — Analyse automatisée
 > # Dataset plus gros pour accentuer le contraste avant/après
-> DATASET_SIZE=1000000 bash scripts/start_light.sh --analyze --appname "mon-api" --creedengo
+> DATASET_SIZE=1000000 bash greenanalyzer/scripts/start_light.sh --analyze --appname "mon-api" --creedengo
 > ```
 > 
 > **A la fin pour nettoyer les ressources, depuis un terminal utilisez : la commande `docker compose down --remove-orphans` ou `podman compose down --remove-orphans` selon votre choix de conteneurisation**.
@@ -217,7 +217,6 @@ Chaque PR déclenche automatiquement :
 - [Checklist de review](CHECKLIST.md)
 - [Mapping pratiques → règles](MAPPING.md)
 - [Exercices avancés](ADVANCED.md)
-- Slides : `docs/slides/`
 
 ## 📄 Licence
 
