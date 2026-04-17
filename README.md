@@ -1,6 +1,6 @@
 # 🌿 Green Architecture : moins de gras, plus d'impact, plus d'efficacité !
 
-[![Green API Score CI](https://github.com/thiernodialloAFA/green-api-workshop-final/actions/workflows/pr-green-api.yml/greenanalyzer/badge.svg)](https://github.com/thiernodialloAFA/green-api-workshop-final/actions/workflows/pr-green-api.yml)
+[![Green API Score CI](https://github.com/thiernodialloAFA/green-api-workshop-final/actions/workflows/pr-green-api.yml/badge.svg)](https://github.com/thiernodialloAFA/green-api-workshop-final/actions/workflows/pr-green-api.yml)
 ![Green Score](greenanalyzer/badges/green-score.svg)
 
 > **Devoxx France 2026 — Tools in Action**
