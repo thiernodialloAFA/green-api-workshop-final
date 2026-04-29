@@ -108,6 +108,12 @@
         <version>${spring.boot.version}</version>
         <configuration>
           <mainClass>com.example.optimized.OptimizedApplication</mainClass>
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>
