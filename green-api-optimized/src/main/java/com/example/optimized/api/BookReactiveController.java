@@ -4,9 +4,12 @@ import com.example.optimized.domain.Book;
 import com.example.optimized.service.BookService;
 import com.example.optimized.repo.BookReactiveRepository;
 import com.example.optimized.service.BookServiceReactif;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -37,7 +40,17 @@ public class BookReactiveController {
         this.repo = repo;
     }
 
+    // ---- OpenAPI example payloads (visible directly in Swagger UI) ----
+    private static final String EX_BOOK = BookController.EX_BOOK;
+    private static final String EX_BOOK_LIST = BookController.EX_BOOK_LIST;
+    private static final String EX_BOOK_SELECT = BookController.EX_BOOK_SELECT;
+    private static final String EX_SUMMARY_TEXT = BookController.EX_SUMMARY_TEXT;
+
     // Endpoint réactif : liste des livres (sans cache)
+    @Operation(summary = "List all reactive books (no cache)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Streamed books",
+        content = @Content(mediaType = "application/json",
+            examples = @ExampleObject(name = "books", value = EX_BOOK_LIST))))
     @GetMapping
     public Flux<Book> allBooksWithoutCache() {
         log.info("Fetching all books without cache");
@@ -45,6 +58,10 @@ public class BookReactiveController {
     }
 
     // Endpoint réactif : liste des livres (cache)
+    @Operation(summary = "List all reactive books (cached)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Cached books",
+        content = @Content(mediaType = "application/json",
+            examples = @ExampleObject(name = "books", value = EX_BOOK_LIST))))
     @GetMapping("/cacheable")
     public Mono<List<Book>> allBooks() {
         log.info("Fetching all books with cache");
@@ -54,6 +71,10 @@ public class BookReactiveController {
 
 
     // Pagination simple (réactif)
+    @Operation(summary = "List reactive books with pagination (DE11)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Page of books",
+        content = @Content(mediaType = "application/json",
+            examples = @ExampleObject(name = "page", value = EX_BOOK_LIST))))
     @GetMapping(params = {"page","size"})
     public Flux<Book> page(
         @RequestParam("page") @Min(0) @Parameter(description = "Zero-based page index", example = "0") int page,
@@ -65,6 +86,10 @@ public class BookReactiveController {
     }
 
     // Filtrage de champs (réactif)
+    @Operation(summary = "List reactive books with field selection (DE08/US01)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Books with only the selected fields",
+        content = @Content(mediaType = "application/json",
+            examples = @ExampleObject(name = "select", value = EX_BOOK_SELECT))))
     @GetMapping(value = "/select")
     public Flux<Object> select(
         @RequestParam(name = "fields", defaultValue = "id,title,author") @Parameter(description = "Whitelisted comma-separated fields (id,title,author,published_date,pages,summary)", example = "id,title,author") String fields,
@@ -88,6 +113,14 @@ public class BookReactiveController {
     }
 
     // Ressource unitaire avec ETag + Last-Modified (réactif)
+    @Operation(summary = "Get a reactive book by id with ETag/Last-Modified (DE02/DE03)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Book found",
+            content = @Content(mediaType = "application/json",
+                examples = @ExampleObject(name = "book", value = EX_BOOK))),
+        @ApiResponse(responseCode = "304", description = "Not Modified (conditional GET)", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Book not found", content = @Content)
+    })
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Book>> byId(
         @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
@@ -127,6 +160,16 @@ public class BookReactiveController {
     }
 
     // Résumé avec support Range 206 (réactif)
+    @Operation(summary = "Get reactive book summary, supports Range requests (206 Partial Content)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Full summary text",
+            content = @Content(mediaType = "text/plain",
+                examples = @ExampleObject(name = "summary", value = EX_SUMMARY_TEXT))),
+        @ApiResponse(responseCode = "206", description = "Partial summary (Range satisfied)",
+            content = @Content(mediaType = "text/plain",
+                examples = @ExampleObject(name = "partial", value = "Auto-gener"))),
+        @ApiResponse(responseCode = "404", description = "Book not found", content = @Content)
+    })
     @GetMapping("/{id}/summary")
     public Mono<ResponseEntity<byte[]>> summaryRange(
         @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
@@ -158,6 +201,10 @@ public class BookReactiveController {
     }
 
     // Delta changes since timestamp (réactif)
+    @Operation(summary = "List reactive books changed since a given timestamp (DE06)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Books modified after the given instant",
+        content = @Content(mediaType = "application/json",
+            examples = @ExampleObject(name = "changes", value = EX_BOOK_LIST))))
     @GetMapping("/changes")
     public Flux<Book> changes(
       @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) @Parameter(description = "ISO-8601 timestamp; only books modified after this instant are returned", example = "2025-01-01T00:00:00Z") Instant since
@@ -166,6 +213,13 @@ public class BookReactiveController {
     }
 
     // Update de démo pour générer des deltas (réactif)
+    @Operation(summary = "Update only the summary field of a reactive book")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Updated book",
+            content = @Content(mediaType = "application/json",
+                examples = @ExampleObject(name = "updated", value = EX_BOOK))),
+        @ApiResponse(responseCode = "404", description = "Book not found", content = @Content)
+    })
     @PostMapping("/{id}/summary")
     public Mono<ResponseEntity<Book>> updateSummary(
             @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
@@ -194,6 +248,10 @@ public class BookReactiveController {
     }
 
     // Endpoint CBOR : retourne la liste des livres au format CBOR (réactif)
+    @Operation(summary = "List reactive books encoded as CBOR (AR02 binary format)")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Books in CBOR binary format (decoded preview shown as JSON)",
+        content = @Content(mediaType = "application/cbor",
+            examples = @ExampleObject(name = "cborDecodedPreview", value = EX_BOOK_LIST))))
     @GetMapping(value = "/cbor", produces = "application/cbor")
     public Flux<Book> getBooksCbor() {
         return repo.findAll();
