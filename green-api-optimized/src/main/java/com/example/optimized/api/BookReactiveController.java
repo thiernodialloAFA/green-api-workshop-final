@@ -4,6 +4,9 @@ import com.example.optimized.domain.Book;
 import com.example.optimized.service.BookService;
 import com.example.optimized.repo.BookReactiveRepository;
 import com.example.optimized.service.BookServiceReactif;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -53,8 +56,8 @@ public class BookReactiveController {
     // Pagination simple (réactif)
     @GetMapping(params = {"page","size"})
     public Flux<Book> page(
-        @RequestParam("page") @Min(0) int page,
-        @RequestParam("size") @Min(1) @Max(100) int size
+        @RequestParam("page") @Min(0) @Parameter(description = "Zero-based page index", example = "0") int page,
+        @RequestParam("size") @Min(1) @Max(100) @Parameter(description = "Page size (max 100)", example = "20") int size
     ){
         return repo.findAll()
             .skip((long) page * size)
@@ -64,9 +67,9 @@ public class BookReactiveController {
     // Filtrage de champs (réactif)
     @GetMapping(value = "/select")
     public Flux<Object> select(
-        @RequestParam(name = "fields", defaultValue = "id,title,author") String fields,
-        @RequestParam(name = "page",defaultValue = "0") @Min(0) int page,
-        @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) int size
+        @RequestParam(name = "fields", defaultValue = "id,title,author") @Parameter(description = "Whitelisted comma-separated fields (id,title,author,published_date,pages,summary)", example = "id,title,author") String fields,
+        @RequestParam(name = "page",defaultValue = "0") @Min(0) @Parameter(description = "Zero-based page index", example = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) @Parameter(description = "Page size (max 100)", example = "20") int size
     ){
         var wanted = FieldSelector.parse(fields);
         return repo.findAll()
@@ -87,9 +90,9 @@ public class BookReactiveController {
     // Ressource unitaire avec ETag + Last-Modified (réactif)
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Book>> byId(
-        @PathVariable("id") long id,
-        @RequestHeader(value = "If-None-Match", required = false) String inm,
-        @RequestHeader(value = "If-Modified-Since", required = false) String ims
+        @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
+        @RequestHeader(value = "If-None-Match", required = false) @Parameter(description = "Conditional GET ETag", example = "\"1\"") String inm,
+        @RequestHeader(value = "If-Modified-Since", required = false) @Parameter(description = "Conditional GET timestamp (RFC 1123)", example = "Wed, 01 Jan 2025 12:00:00 GMT") String ims
     ){
         return repo.findById(id).map(b -> {
             return getBookResponseEntity(inm, ims, b);
@@ -126,8 +129,8 @@ public class BookReactiveController {
     // Résumé avec support Range 206 (réactif)
     @GetMapping("/{id}/summary")
     public Mono<ResponseEntity<byte[]>> summaryRange(
-        @PathVariable("id") long id,
-        @RequestHeader(value = "Range", required = false) String range
+        @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
+        @RequestHeader(value = "Range", required = false) @Parameter(description = "Byte range, e.g. bytes=0-9", example = "bytes=0-9") String range
     ){
         return repo.findById(id).map(b -> {
             var summary = b.getSummary();
@@ -157,14 +160,24 @@ public class BookReactiveController {
     // Delta changes since timestamp (réactif)
     @GetMapping("/changes")
     public Flux<Book> changes(
-      @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant since
+      @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) @Parameter(description = "ISO-8601 timestamp; only books modified after this instant are returned", example = "2025-01-01T00:00:00Z") Instant since
     ){
         return repo.findAll().filter(b -> b.getLastModified().isAfter(since));
     }
 
     // Update de démo pour générer des deltas (réactif)
     @PostMapping("/{id}/summary")
-    public Mono<ResponseEntity<Book>> updateSummary(@PathVariable("id") long id, @RequestBody Map<String, String> body){
+    public Mono<ResponseEntity<Book>> updateSummary(
+            @PathVariable("id") @Parameter(description = "Book identifier", example = "1") long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "Object containing the new summary text",
+                required = true,
+                content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(name = "summaryUpdate", value = "{\n  \"summary\": \"Updated summary text for the book.\"\n}")
+                )
+            )
+            @RequestBody Map<String, String> body){
         return repo.findById(id).flatMap(old -> {
             var updated = new Book(
                 old.getId(),
