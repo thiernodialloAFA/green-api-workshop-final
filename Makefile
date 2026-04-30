@@ -92,3 +92,31 @@ lint:  ## Run Spectral lint on the discovered spec
 ci-gate: analyze  ## Run analysis + fail if below threshold
 	@echo "CI gate passed (threshold checked by analyzer)"
 
+# ── Packaging ─────────────────────────────────────────────
+GREEN_IMAGE  := greenanalyzer:latest
+DIST_DIR     := greenanalyzer/dist
+
+.PHONY: build-image
+build-image:  ## Build the Green Analyzer Docker image
+	$(CONTAINER_RT) build -t $(GREEN_IMAGE) greenanalyzer/
+
+.PHONY: package
+package: build-image  ## Package Green Analyzer for distribution (dist/)
+	@echo ""
+	@echo "  📦  Packaging complete!"
+	@echo "  ──────────────────────"
+	@echo "  Distribution files in: $(DIST_DIR)/"
+	@echo ""
+	@ls -la $(DIST_DIR)/
+	@echo ""
+	@echo "  To distribute: copy $(DIST_DIR)/ to users."
+	@echo "  Users also need the Docker image:"
+	@echo "    $(CONTAINER_RT) save $(GREEN_IMAGE) -o greenanalyzer.tar"
+	@echo "    $(CONTAINER_RT) load -i greenanalyzer.tar"
+	@echo ""
+
+.PHONY: export-image
+export-image: build-image  ## Export Docker image as .tar file
+	$(CONTAINER_RT) save $(GREEN_IMAGE) -o $(DIST_DIR)/greenanalyzer.tar
+	@echo "  ✅  Image exported to $(DIST_DIR)/greenanalyzer.tar"
+

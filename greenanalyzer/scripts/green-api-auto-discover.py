@@ -246,8 +246,101 @@ def extract_endpoints(spec):
                 "tags": op.get("tags", []),
                 "produces": op.get("produces", []),
                 "responses": op.get("responses", {}),
+                # Per-operation infra/architecture extensions (x-async-pattern,
+                # x-event-driven, x-scaling-profile)
+                "x_async_pattern":   op.get("x-async-pattern")   or (op.get("extensions") or {}).get("x-async-pattern"),
+                "x_event_driven":    op.get("x-event-driven")    or (op.get("extensions") or {}).get("x-event-driven"),
+                "x_scaling_profile": op.get("x-scaling-profile") or (op.get("extensions") or {}).get("x-scaling-profile"),
             })
     return endpoints
+
+
+# ─── Step 1b: Infrastructure & Architecture Discovery ──────────────────────
+
+def extract_infrastructure(spec, endpoints):
+    """Read x-infrastructure (root) + per-operation x-async-pattern /
+    x-event-driven / x-scaling-profile extensions and produce a structured
+    summary + bonus signals (IN01, IN02, AR03, RT01, SU01).
+
+    These are *informational bonuses* — they do not alter the /100 base score
+    but are surfaced in the report under `infrastructure`.
+    """
+    infra = (spec.get("x-infrastructure")
+             or (spec.get("extensions") or {}).get("x-infrastructure")
+             or {})
+
+    platform       = infra.get("platform") or {}
+    autoscaling    = infra.get("autoscaling") or {}
+    architecture   = infra.get("architecture") or {}
+    runtime        = infra.get("runtime") or {}
+    sustainability = infra.get("sustainability") or {}
+
+    # Per-operation aggregation
+    async_eps         = [e for e in endpoints if e.get("x_async_pattern")]
+    event_driven_eps  = [e for e in endpoints if e.get("x_event_driven")]
+    scaling_profiles  = [e for e in endpoints if e.get("x_scaling_profile")]
+
+    bonuses = []
+
+    if autoscaling.get("enabled") and platform.get("type") == "kubernetes":
+        bonuses.append({
+            "id": "IN01", "label": "Kubernetes + Autoscaling declared",
+            "points": 5,
+            "evidence": f"x-infrastructure.autoscaling.type={autoscaling.get('type','?')}",
+        })
+
+    if autoscaling.get("scaleToZero") is True or autoscaling.get("minReplicas") == 0:
+        bonuses.append({
+            "id": "IN02", "label": "Scale-to-zero (KEDA / Knative)",
+            "points": 5,
+            "evidence": "minReplicas=0 → no idle energy when traffic = 0",
+        })
+
+    ed = (architecture.get("eventDriven") or {})
+    aapi = (architecture.get("asyncApi") or {})
+    if ed.get("enabled") or aapi.get("enabled") or async_eps or event_driven_eps:
+        bonuses.append({
+            "id": "AR03", "label": "Event-driven / Async API",
+            "points": 5,
+            "evidence": (
+                f"eventDriven={bool(ed.get('enabled'))}, asyncApi={bool(aapi.get('enabled'))}, "
+                f"async_endpoints={len(async_eps)}, event_endpoints={len(event_driven_eps)}"
+            ),
+        })
+
+    if (runtime.get("jvm") or "").lower() in ("graalvm-native", "graalvm", "native-image"):
+        bonuses.append({
+            "id": "RT01", "label": "Efficient runtime (GraalVM native)",
+            "points": 3,
+            "evidence": f"runtime.jvm={runtime.get('jvm')}",
+        })
+
+    if sustainability.get("greenEnergy") or platform.get("carbonAware"):
+        bonuses.append({
+            "id": "SU01", "label": "Carbon-aware / green energy region",
+            "points": 2,
+            "evidence": (
+                f"carbonAware={platform.get('carbonAware')}, "
+                f"greenEnergy={sustainability.get('greenEnergy')}"
+            ),
+        })
+
+    return {
+        "declared":      bool(infra),
+        "platform":      platform,
+        "autoscaling":   autoscaling,
+        "architecture":  architecture,
+        "runtime":       runtime,
+        "sustainability": sustainability,
+        "per_operation": {
+            "async_endpoints":        [f"{e['method']} {e['path']}" for e in async_eps],
+            "event_driven_endpoints": [f"{e['method']} {e['path']}" for e in event_driven_eps],
+            "scaling_profiles":       [f"{e['method']} {e['path']}" for e in scaling_profiles],
+        },
+        "bonus_signals":  bonuses,
+        "bonus_total":    sum(b["points"] for b in bonuses),
+        "bonus_max":      20,
+    }
 
 
 # ─── Step 2: Spectral Linting ──────────────────────────────────────────────
@@ -1730,6 +1823,22 @@ Examples:
             "infos": sum(1 for i in spectral_issues if (i.get("severity") or 99) >= 2),
             "issues": spectral_issues[:100],
         }
+
+    # ── Infrastructure & Architecture (from x-infrastructure + per-op x-* ext.)
+    try:
+        infra_report = extract_infrastructure(spec, filtered_eps)
+        dashboard_report["infrastructure"] = infra_report
+        if infra_report.get("declared"):
+            log(
+                f"  INFRA   : platform={infra_report['platform'].get('type','?')}"
+                f" autoscaling={infra_report['autoscaling'].get('type','none')}"
+                f" bonus=+{infra_report['bonus_total']}/{infra_report['bonus_max']}",
+                "OK",
+            )
+        else:
+            log("  INFRA   : no x-infrastructure block declared (skipped)", "INFO")
+    except Exception as e:
+        log(f"  INFRA   : extraction failed ({e})", "WARN")
 
     # Wrap report with appname envelope
     wrapped_report = {
