@@ -2,7 +2,7 @@ name: "🌿 Green API Score CI"
 
 on:
   push:
-    branches: [main, master, develop, feat/devoxx, feat/devoxx-creedengo]
+    branches: [main, master, develop, feat/devoxx]
   pull_request:
     branches: [main, master]
 
