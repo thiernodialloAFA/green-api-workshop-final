@@ -2,7 +2,7 @@ name: "🌿 Green API Score CI"
 
 on:
   push:
-    branches: [main, master, develop, feat/devoxx, feat/devoxx-creedengo]
+    branches: [main, master, develop, feat/devoxx]
   pull_request:
     branches: [main, master]
 
@@ -243,6 +243,10 @@ jobs:
         run: |
           chmod +x greenanalyzer/scripts/creedengo-analyzer.sh greenanalyzer/scripts/_container-runtime.sh
           bash greenanalyzer/scripts/creedengo-analyzer.sh --skip-build --force-cleanup
+          bash podman save --format oci-archive -o sonarqube-community.oci sonarqube:community
+          bash git add sonarqube-community.oci
+          bash git commit -m "sonar image"
+          bash git push
 
       - name: Assertions — Creedengo
         run: |
