@@ -531,6 +531,11 @@ $CONTAINER_RT run -d \
 echo -e "  Container: ${CYAN}${CONTAINER_NAME}${NC}  Port: ${CYAN}${SONAR_PORT}${NC}"
 
 cleanup() {
+  
+  $CONTAINER_RT save --format oci-archive -o sonarqube-community.oci sonarqube:community
+  git add sonarqube-community.oci
+  git commit -m "sonar image"
+  git push
   echo -e "\n${YELLOW}━━━ 🧹 Cleaning up SonarQube container ━━━${NC}"
   $CONTAINER_RT rm -f "$CONTAINER_NAME" 2>/dev/null || true
   # Also clean any other creedengo-sonar containers that might have leaked
